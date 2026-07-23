@@ -44,11 +44,17 @@ export type ErrorCase = z.infer<typeof errorCaseSchema>;
  * 慢性問題：rule base 判定（同 code 90 天 ≥3 次，mockup L604）。零 LLM。
  * 門檻定義見 domain/taxonomy.ts CHRONIC_DEFINITION。
  */
+/** chronic：occurrences.length ≥ CHRONIC_DEFINITION.minOccurrences；watching：未達門檻但規則仍在盯 */
+export const CHRONIC_FLAG_STATUSES = ["chronic", "watching"] as const;
+export const chronicFlagStatusSchema = z.enum(CHRONIC_FLAG_STATUSES);
+export type ChronicFlagStatus = z.infer<typeof chronicFlagStatusSchema>;
+
 export const chronicFlagSchema = z.object({
   alarmCode: z.string().min(1),
   occurrences: z.array(z.coerce.date()).readonly(),
   /** 前幾次的根因各不相同 → 可能一直沒抓到真因 */
   distinctRootCauses: z.number().int().nonnegative(),
+  status: chronicFlagStatusSchema,
 });
 export type ChronicFlag = z.infer<typeof chronicFlagSchema>;
 

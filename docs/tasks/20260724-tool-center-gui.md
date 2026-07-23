@@ -79,8 +79,11 @@ Status: active (2026-07-24)
       時序與分布不共用任何 code（正交性）
 - [x] A1.3 **`DataSource` 介面定義**（`src/data/types.ts`）
       -> 介面檔只 import type，零 fixture／fetch 實作；每個查詢都帶 sectionId
-- [ ] A1.4 `src/data/fixtures/` 實作：mockup 全部假資料轉 fixtures，形狀比照 A1.0 sample
-      -> 每個畫面都有資料，且 fixtures 通過 A1.1 的 schema
+- [x] A1.4 `src/data/fixtures/` 實作（派 sonnet implementer）：mockup 假資料 → fixtures +
+      `FixturesDataSource`。形狀比照 mockup（A1.0 API sample 尚未取得，Stage B 需回頭校正）
+      -> `fixtures.test.ts` 對每個 fixture 呼叫對應 zod schema `.parse()`；
+      整合檢查 typecheck 0 / lint 0 / **test 120 passed**（96 + 24）。
+      **獨立驗證進行中（opus reviewer）——未經 reviewer 前不宣告此步為已驗證。**
 - [ ] A1.5 Server Actions 骨架（pin / annotate / feedback / settings）+ `useOptimistic`
       Stage A 寫入暫存 -> 樂觀更新與失敗回滾各一測試
 - [ ] A1.6 Demo 模式標示元件（誠實告知假資料）-> 每頁可見
@@ -295,6 +298,18 @@ Status: active (2026-07-24)
   並改用顯式 cd 重裝。教訓：每個 pnpm 指令都要顯式帶專案路徑。
   **A1.0 仍 BLOCKED（缺既有 API sample）；A1.4 fixtures／A1.5 Server Actions／A1.6 demo 標示／
   A1.7 i18n／A1.10 角色切換器／A1.11 gating 尚未開始。**
+- 2026-07-24 | A1 | A1.4 fixtures 派 sonnet 完成（9 檔 + FixturesDataSource + 逐一過 schema 的測試）。
+  整合檢查 typecheck 0 / lint 0 / test 120 passed。
+- 2026-07-24 | A1 | **獨立驗證（opus reviewer，fresh context）：型別／taxonomy／權限矩陣三層
+  APPROVE（reviewer 親跑 typecheck/lint/test、逐格比對 23 列權限、確認 D1 紅線於型別成立）。
+  fixtures 層 FIX-FIRST——2 個 should-fix bug + 1 nit。** 這補上 A0/A1 先前欠的 author≠verifier。
+  findings 已派回 author 層（sonnet）修，記為 §4 第 1 次 fix round（cap 內）。
+- 2026-07-24 | A1 | fix round 完成（sonnet 修 3 項），commander 再驗：typecheck 0 / lint 0 /
+  **test 122 passed**（+2 斷言：chronic status 不變量、pin→case referential integrity），
+  並逐一 read-back 四個改動點對照 findings。A1.4 review→fix→re-verify 閉環完成。
+  判斷（judgment.md）：4 行機械修正 + commander 為 fresh-vs-author context，不再另派 opus re-review。
+  **A1 已驗證部分：A1.1／A1.2／A1.3／A1.4／A1.8／A1.9。剩 A1.0（BLOCKED 缺 API sample）、
+  A1.5 Server Actions／A1.6 demo 標示／A1.7 i18n／A1.10 角色切換器／A1.11 gating。**
 
 ---
 
@@ -374,4 +389,19 @@ Status: active (2026-07-24)
 
 ### 待答
 
-（無。需求確認完畢。）
+（需求面無。以下為 A1.4 fixtures 冒出的技術待決項，部分待 reviewer 判決。）
+
+- **reviewer findings 已修復並經 commander 再驗（read-back + test 122 passed）：**
+  - STAGE-VIB-003 誤標慢性 → `chronicFlagSchema` 加 `status: 'chronic'|'watching'`
+    （chronic ⟺ occurrences ≥ CHRONIC_DEFINITION.minOccurrences）。STAGE-VIB 改 watching。
+    測試 `fixtures.test.ts:127` 強制此不變量。
+  - `pin-02` 懸空 caseId → 補 closed 的 VAC-INTERLOCK-GV2 ErrorCase + referential-integrity 測試
+    （`fixtures.test.ts:134`：每個 pin.caseId 必存在於 errorCases）。
+  - nit：`data/types.ts` 的 `@param resolution` 已移到 `getTChartAnalysis`。
+- **D2 校正清單**（型別表達力不足，待真實 API sample 到手時一併處理）：
+  - `chuckMapSchema.pattern` 是單一 enum，裝不下複合 pattern「TILT + EDGE ROLL-OFF」（暫留 TILT）。
+  - Leveling 的「HOT SPOT」在空間 taxonomy 沒有對應 code（暫映射到 DOME/RANDOM）——
+    可能需要新增一個 hot-spot pattern。
+  - `field_focus` / `slit` 是聚合量測（非 per-chuck），但 schema 強制兩個 chuck——
+    暫把同一讀數複製到 A/B。schema 是否該允許單一量測？
+  - mockup 日期本身不一致（case 顯示 07/03 案號但敘事說 07/14）——fixtures 暫取 07-14。

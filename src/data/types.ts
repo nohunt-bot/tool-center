@@ -38,11 +38,11 @@ export type DataSource = {
   listPinnedCards(toolId: string): Promise<readonly PinnedCard[]>;
 
   // ── FDC ───────────────────────────────────────────────────
+  getUChartAnalysis(toolId: string, caseId: string): Promise<UChartAnalysis>;
   /**
-   * @param resolution 顯示解析度。1kHz 單片約 4 萬點，一律降採樣後回傳；
+   * @param options.resolution 顯示解析度。1kHz 單片約 4 萬點，一律降採樣後回傳；
    *   異常點由 ML kernel 獨立產出，不受降採樣影響（task D7）。
    */
-  getUChartAnalysis(toolId: string, caseId: string): Promise<UChartAnalysis>;
   getTChartAnalysis(
     toolId: string,
     caseId: string,
