@@ -46,8 +46,9 @@ Status: active (2026-07-24)
 - [x] A0.1 決策記錄 -> `docs/decisions/0001-frontend-stack.md`（含被否決的 SPA／static export 與理由）
 - [x] A0.2 Scaffold：**Next 16.2.11**（計畫寫 15，實際最新為 16）+ React 19.2.4 + TS strict
       + ESLint flat + Prettier + Vitest + Playwright -> `pnpm typecheck/lint/test/build` 全綠
-- [ ] A0.3 CI pipeline（typecheck / lint / test / build）-> pipeline 綠
-      **BLOCKED：需確認 GitHub Actions 還是 GitLab CI**（`pnpm verify` 已備妥，只差 workflow 檔）
+- [ ] A0.3 CI pipeline -> **DEFERRED（使用者指示 2026-07-24：先不要管 CI）**。
+      `pnpm verify` 已備妥（typecheck + lint + test + build 串接），
+      要接 CI 時只差一個 workflow 檔；平台（GitHub Actions / GitLab CI）待定。
 - [x] A0.4 Design token 移植：mockup CSS vars（L8–12）→ `globals.css` `@theme` + `src/lib/status.ts`
       -> `src/lib/status.test.ts` 5 tests passed（含「六狀態底色互異」與「PM 淺底配深字」）
 - [x] A0.5 字型：**不需 `next/font/local`**——mockup 用的是系統字型堆疊（Microsoft JhengHei /
@@ -66,13 +67,18 @@ Status: active (2026-07-24)
 
 - [ ] A1.0 **取得既有 API 的實際 response sample**（FDC / SPC / MES / KM / Case / log / graph）
       -> sample 存入 `docs/api/samples/`，每個端點至少一筆真實回應
-- [ ] A1.1 Domain 型別 + zod schema：`Tool` `Chamber` `ToolStatus` `ToolCommand` `ErrorCase` `FdcSeries`
-      `Segment` `PatternLabel(time×dist)` `BaselineVerdict` `WaferMap` `ChuckVerdict` `GraphNode`
-      `GraphEdge(physical|experience)` `PinnedCard` `McpTool` `ExpertTag` `KmSource` `CopilotMessage`
-      -> `tsc` 通過 + 用 A1.0 的 sample 跑 schema 驗證
-- [ ] A1.2 受控 taxonomy 單一真相來源：時序 6 種 × 分布 5 種 × 空間 pattern 10 種
-      （mockup L1930–1946、L1255–1270）-> unit test 驗「UI 下拉選項 === zod enum」
-- [ ] A1.3 **`DataSource` 介面定義**（Stage A/B 的接縫）-> 介面檔不含任何 fixture 或 fetch 實作細節
+      **BLOCKED：需要使用者提供 API 存取方式或幾份實際回應。**
+      目前 domain 型別是依 mockup 反推的，這正是 D2 警告的做法——
+      sample 到手後必須回頭校正型別與 fixtures，越晚做代價越大。
+- [x] A1.1 Domain 型別 + zod schema -> `tsc` 通過。
+      `domain/{user,tool,case,fdc,graph,settings,spatial,taxonomy}.ts`
+      （`CopilotMessage` 留到 A10，因為訊息 block 結構與 streaming 形狀綁在一起）
+      **未用 A1.0 的 sample 驗證——sample 尚未取得，見下方 A1.0**
+- [x] A1.2 受控 taxonomy 單一真相來源：時序 6 × 分布 5 × 空間 10
+      -> `domain/taxonomy.test.ts` 6 tests：enum 與說明表雙向對齊、zod 擋非法值、
+      時序與分布不共用任何 code（正交性）
+- [x] A1.3 **`DataSource` 介面定義**（`src/data/types.ts`）
+      -> 介面檔只 import type，零 fixture／fetch 實作；每個查詢都帶 sectionId
 - [ ] A1.4 `src/data/fixtures/` 實作：mockup 全部假資料轉 fixtures，形狀比照 A1.0 sample
       -> 每個畫面都有資料，且 fixtures 通過 A1.1 的 schema
 - [ ] A1.5 Server Actions 骨架（pin / annotate / feedback / settings）+ `useOptimistic`
@@ -80,12 +86,12 @@ Status: active (2026-07-24)
 - [ ] A1.6 Demo 模式標示元件（誠實告知假資料）-> 每頁可見
 - [ ] A1.7 **i18n 骨架**：next-intl + `app/[locale]/` 路由 + 語系切換 + `en` 空訊息檔 fallback
       -> 切換語系不掉頁面狀態；lint 規則擋下硬寫中文字串；切到 en 全站 fallback 顯示 zh-TW 不報錯
-- [ ] A1.8 **受控 taxonomy 定義表**（時序 6 × 分布 5 × 空間 10）
-      英文 code 為主鍵（識別碼，非翻譯）+ zh-TW 說明
-      -> test 驗「UI 下拉 === zod enum === 訊息檔鍵值」三者完全對齊
-- [ ] A1.9 **`resolveRole(user, sectionId, grants)` + 權限矩陣資料結構**
-      （`Record<Capability, Role[]>`，不得散落在元件 if-else）
-      -> 3 角色 × 23 功能 = 69 個斷言全過；grant 另測授予／撤銷／`expiresAt` 過期失效
+- [x] A1.8 **受控 taxonomy 定義表** -> 併入 A1.2（英文 code 為主鍵 + zh-TW 說明）。
+      「=== 訊息檔鍵值」那一項待 A1.7 建 i18n 後補上
+- [x] A1.9 **`resolveRole` + 權限矩陣資料結構**（`lib/permission.ts`，`Record<Capability, Role[]>`）
+      -> `lib/permission.test.ts` 共 85 tests：23 功能 × 3 角色 = 69 個矩陣斷言，
+      加 resolveRole 5、grant 6（授予／撤銷／過期／未過期／不外溢／不可升 admin）、
+      canEnterSection 2、canEditPinTitle 3。全部通過
 - [ ] A1.10 角色切換器（Stage A demo 用，Stage B 接 OIDC 後自動停用）
       -> admin／editor／viewer 三種視角各看到正確的可編輯範圍
 - [ ] A1.11 跨課進入 gating（`user.supportSections`）-> 無支援權限的課別在選單 disabled，
@@ -281,6 +287,14 @@ Status: active (2026-07-24)
   **A0.3 CI 卡住：需確認 GitHub Actions 或 GitLab CI。其餘 A0.1–A0.8 完成。**
   修正 2 項：next.config 明確指定 `turbopack.root`（否則 Next 會把 `/Users/ch` 當 workspace root，
   standalone 檔案追蹤範圍會錯）；`.gitignore` 原有 3 行已備份為 `.gitignore.bak-20260724` 後合併。
+- 2026-07-24 | A0 | A0.3 依使用者指示改為 DEFERRED（先不管 CI）。A0 其餘完成，commit `82a3c4d`。
+- 2026-07-24 | A1 | A1.1／A1.2／A1.3／A1.8／A1.9 完成。zod 4.4.3。
+  `pnpm typecheck`=0、`pnpm lint`=0、`pnpm test`= **96 passed**（status 5 + taxonomy 6 + permission 85）。
+  TRIPWIRE：`pnpm add zod` 首次跑在錯誤的 cwd（`/Users/ch/.hermes`，shell cwd 於 scaffold 後被重置），
+  在該處產生 `node_modules`／`package.json`／`pnpm-lock.yaml`。已確認內容僅 zod 後移除，
+  並改用顯式 cd 重裝。教訓：每個 pnpm 指令都要顯式帶專案路徑。
+  **A1.0 仍 BLOCKED（缺既有 API sample）；A1.4 fixtures／A1.5 Server Actions／A1.6 demo 標示／
+  A1.7 i18n／A1.10 角色切換器／A1.11 gating 尚未開始。**
 
 ---
 
