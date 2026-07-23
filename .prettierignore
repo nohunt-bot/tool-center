@@ -1,0 +1,10 @@
+.next/
+out/
+build/
+coverage/
+node_modules/
+pnpm-lock.yaml
+next-env.d.ts
+
+# 原始 mockup：保留原貌以便對照，不套用格式化
+urd/

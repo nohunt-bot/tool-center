@@ -1,0 +1,2453 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Tool Center · 黃光二課</title>
+<style>
+:root{
+  --bg:#eef0f3;--panel:#fff;--line:#e2e5ea;--ink:#14171f;--ink2:#4b5563;--ink3:#9ca3af;
+  --teal:#0d9488;--teal-bg:#ecfdf7;--blue:#2563eb;--red:#dc2626;--red-bg:#fef2f2;
+  --gold:#d97706;--gold-bg:#fffbeb;--mono:'Consolas','Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Microsoft JhengHei",Calibri,sans-serif;background:var(--bg);color:var(--ink);
+  font-size:13px;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+.st-UP{background:#16a34a;}.st-DOWN{background:#dc2626;}.st-OFF{background:#111827;}
+.st-WEQ{background:#a855f7;}.st-PM{background:#7dd3fc;color:#0c4a6e;}.st-LOST{background:#1e3a8a;}
+.hdr{background:var(--panel);border-bottom:1px solid var(--line);padding:10px 20px;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;}
+.hdr-name{font-size:16px;font-weight:700;}
+.hdr-sub{font-size:10px;color:var(--ink3);}
+.ctl-label{font-size:10px;color:var(--ink3);font-weight:700;letter-spacing:.04em;}
+.ctl-sel{border:1px solid var(--line);border-radius:7px;padding:5px 10px;font-size:12px;
+  font-family:inherit;background:#fff;outline:none;cursor:pointer;}
+.perm-note{font-size:9.5px;color:var(--ink3);}
+.gear{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:5px 11px;
+  font-size:11px;cursor:pointer;font-family:inherit;color:var(--ink2);margin-left:auto;}
+.gear:hover{background:#f3f4f6;}
+.ctrlbar{display:flex;align-items:center;gap:8px;padding:9px 20px;background:var(--panel);
+  border-bottom:1px solid var(--line);flex-wrap:wrap;flex-shrink:0;}
+.ctrlbar label{font-size:10px;color:var(--ink3);font-weight:700;letter-spacing:.04em;}
+.ctrlbar select{border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:12px;
+  font-family:inherit;background:#fff;outline:none;cursor:pointer;}
+.ctrlbar select:disabled{background:#f3f4f6;color:#9ca3af;cursor:not-allowed;}
+.fb-note{font-size:10px;color:var(--ink3);margin-left:auto;}
+.result{flex:1;overflow:hidden;}
+.pane{display:none;height:100%;}
+.pane.on{display:block;}
+.forest{height:100%;overflow-y:auto;padding:16px 20px;}
+.f-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+.f-title{font-size:14px;font-weight:700;}
+.legend{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;}
+.lg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--ink2);}
+.lg i{width:10px;height:10px;border-radius:2px;display:inline-block;}
+.bricks{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;}
+.brick{border-radius:10px;padding:10px 12px;color:#fff;cursor:pointer;min-height:100px;
+  display:flex;flex-direction:column;box-shadow:0 2px 6px rgba(0,0,0,.15);transition:transform .12s;}
+.brick:hover{transform:translateY(-2px);}
+.bk-name{font-weight:700;font-size:13px;}
+.bk-type{font-size:10px;opacity:.85;}
+.bk-stat{font-size:9px;opacity:.9;font-family:var(--mono);margin-bottom:auto;}
+.bk-st{font-size:9px;font-weight:700;letter-spacing:.08em;opacity:.95;}
+.chs{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;}
+.ch{font-size:9px;font-weight:700;padding:3px 6px;border-radius:4px;color:#fff;
+  border:1px solid rgba(255,255,255,.55);}
+.detail{height:100%;overflow:hidden;padding:14px 20px;display:grid;
+  grid-template-columns:1fr 300px;gap:12px;}
+.col-main,.col-side{display:flex;flex-direction:column;gap:12px;overflow-y:auto;min-height:0;}
+.zone{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:13px 15px;}
+.zone-hd{font-size:11px;font-weight:700;color:var(--ink2);letter-spacing:.05em;margin-bottom:9px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.hint{font-weight:400;color:var(--ink3);font-size:10px;}
+.tcmd{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);
+  border-radius:8px;margin-bottom:6px;font-size:12px;background:#fffdf5;}
+.tcmd-tag{font-size:9px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--gold-bg);
+  color:#92400e;border:1px solid #fde68a;flex-shrink:0;}
+.tcmd-meta{font-size:10px;color:var(--ink3);margin-left:auto;}
+.add-btn{border:1px dashed var(--line);border-radius:8px;padding:7px;text-align:center;
+  font-size:11px;color:var(--ink3);cursor:pointer;}
+.add-btn:hover{border-color:var(--teal);color:var(--teal);}
+.evt{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);
+  border-radius:8px;margin-bottom:6px;font-size:12px;}
+.evt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.evt-title{font-weight:600;}
+.evt-meta{font-size:10px;color:var(--ink3);}
+.evt-right{margin-left:auto;}
+.btn-sm{font-size:10px;padding:4px 10px;border-radius:5px;border:1px solid var(--line);
+  background:var(--panel);cursor:pointer;color:var(--ink2);font-family:inherit;}
+.btn-sm:hover{background:#f3f4f6;}
+.btn-ai{border-color:#99f6e4;color:var(--teal);background:var(--teal-bg);}
+.chip-chronic{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;
+  padding:4px 10px;border-radius:99px;background:var(--red-bg);color:#991b1b;
+  border:1px solid #fca5a5;cursor:pointer;}
+.spark-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.spark{border:1px solid var(--line);border-radius:8px;padding:8px 10px;}
+.spark.alert{border-color:#fca5a5;background:var(--red-bg);}
+.spark-name{font-size:10px;color:var(--ink3);}
+.spark-val{font-family:var(--mono);font-size:15px;font-weight:700;}
+.spark.alert .spark-val{color:var(--red);}
+.spark svg{width:100%;height:32px;margin-top:4px;}
+.pm-strip{display:flex;gap:8px;align-items:center;background:#f0f9ff;border:1px solid #bae6fd;
+  border-radius:8px;padding:8px 12px;font-size:11px;margin-bottom:10px;flex-wrap:wrap;}
+.pm-strip b{font-family:var(--mono);}
+.file{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);
+  border-radius:8px;margin-bottom:6px;font-size:12px;}
+.file-name{font-weight:600;}
+.file-meta{font-size:10px;color:var(--ink3);}
+.file-right{margin-left:auto;}
+.ingested{font-size:11px;color:var(--teal);font-weight:600;}
+.src-url{font-size:10px;color:#2563eb;word-break:break-all;line-height:1.5;}
+.connected{font-size:11px;color:var(--teal);font-weight:600;white-space:nowrap;}
+.src-add{display:flex;gap:8px;margin-top:8px;}
+.src-add input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 11px;
+  font-size:12px;font-family:inherit;outline:none;}
+.src-add input:focus{border-color:var(--teal);}
+.src-add button{border:none;background:var(--teal);color:#fff;border-radius:8px;padding:0 14px;
+  font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.src-hint{font-size:10px;color:var(--ink3);line-height:1.7;margin-top:6px;}
+.mcp-row{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-top:1px solid #f0f0f0;}
+.mcp-row:first-of-type{border-top:none;}
+.mcp-row input[type=checkbox]{margin-top:2px;width:15px;height:15px;accent-color:var(--teal);cursor:pointer;flex-shrink:0;}
+.mcp-row.locked input[type=checkbox]{cursor:not-allowed;}
+.mcp-main{flex:1;font-size:12px;line-height:1.5;}
+.mcp-name{font-weight:600;color:var(--ink);}
+.mcp-desc{font-size:10px;color:var(--ink3);line-height:1.6;margin-top:1px;}
+.mcp-lock{font-size:9px;font-weight:700;background:#fef3c7;color:#b45309;border-radius:99px;
+  padding:2px 8px;white-space:nowrap;margin-left:auto;flex-shrink:0;}
+.mcp-off-tag{font-size:9px;font-weight:700;background:#f3f4f6;color:#6b7280;border-radius:99px;
+  padding:2px 8px;white-space:nowrap;margin-left:auto;flex-shrink:0;}
+.file-dl{font-size:10px;color:var(--ink3);border:1px solid var(--line);border-radius:5px;
+  padding:3px 8px;cursor:pointer;background:#fff;font-family:inherit;text-decoration:none;}
+.file-dl:hover{border-color:var(--teal);color:var(--teal);}
+.file-ref{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ink3);
+  cursor:pointer;user-select:none;white-space:nowrap;}
+.file-ref input{width:14px;height:14px;accent-color:var(--teal);cursor:pointer;}
+.file-ref.on{color:var(--teal);font-weight:600;}
+.file-actions{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.btn-ingest{font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid var(--teal);
+  background:var(--teal);color:#fff;cursor:pointer;font-family:inherit;font-weight:600;}
+.attrs{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;font-size:11px;}
+.attrs dt{color:var(--ink3);font-size:9px;letter-spacing:.05em;}
+.attrs dd{font-weight:600;font-family:var(--mono);font-size:11px;margin-bottom:3px;}
+.chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{font-size:11px;padding:6px 11px;border-radius:99px;border:1px solid var(--line);
+  background:#f8f9fb;cursor:pointer;color:var(--ink2);}
+.chip:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-bg);}
+.pinned{border:1px solid #99f6e4;background:var(--teal-bg);border-radius:8px;padding:10px 12px;
+  margin-bottom:8px;}
+.pinned-hd{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
+  color:#115e59;margin-bottom:5px;flex-wrap:wrap;}
+.pinned-body{font-size:11.5px;color:var(--ink2);line-height:1.7;}
+.pinned-meta{font-size:9px;color:var(--ink3);margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;}
+.skill-lv{font-size:8px;font-weight:700;padding:1px 6px;border-radius:99px;}
+.lv-private{background:#f3f4f6;color:#6b7280;}
+.lv-common{background:#dbeafe;color:#1e40af;}
+.fab{position:fixed;right:22px;bottom:22px;width:52px;height:52px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,#0d9488,#134e4a);color:#fff;font-weight:700;font-size:13px;
+  cursor:pointer;box-shadow:0 6px 18px rgba(13,148,136,.4);z-index:60;font-family:inherit;}
+.rail{position:fixed;top:0;right:0;height:100vh;width:360px;max-width:100vw;background:var(--panel);
+  border-left:1px solid var(--line);transform:translateX(105%);transition:transform .22s ease;
+  z-index:70;box-shadow:-8px 0 30px rgba(0,0,0,.15);display:flex;flex-direction:column;}
+.rail.open{transform:translateX(0);}
+.rail-hd{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;}
+.rail-logo{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#0d9488,#134e4a);
+  color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;}
+.rail-title{font-weight:700;font-size:13px;}
+.rail-ctx{font-size:9px;color:var(--ink3);}
+.rail-close{margin-left:auto;border:none;background:none;font-size:14px;color:var(--ink3);
+  cursor:pointer;font-family:inherit;}
+.msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}
+.msg-u{align-self:flex-end;background:#134e4a;color:#ccfbf1;font-size:12px;
+  border-radius:12px 12px 4px 12px;padding:8px 12px;max-width:85%;}
+.msg-b{align-self:flex-start;background:#f4f5f7;border:1px solid var(--line);font-size:12px;
+  border-radius:12px 12px 12px 4px;padding:9px 12px;max-width:92%;line-height:1.65;}
+.cite{display:block;margin-top:7px;padding-top:6px;border-top:1px solid var(--line);
+  font-size:10px;color:var(--ink3);}
+.pin-btn{font-size:10px;border:1px solid #99f6e4;background:#fff;color:var(--teal);
+  border-radius:5px;padding:3px 8px;cursor:pointer;font-family:inherit;margin-top:6px;}
+.msg-acts{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;}
+.copy-btn{font-size:10px;border:1px solid var(--line);background:#fff;color:var(--ink3);
+  border-radius:5px;padding:3px 8px;cursor:pointer;font-family:inherit;}
+.copy-btn:hover{border-color:var(--teal);color:var(--teal);}
+.copy-btn.done{border-color:#0d9488;color:#0d9488;}
+/* CASE ID 打包彈窗 */
+.case-modal{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:120;
+  display:none;align-items:center;justify-content:center;}
+.case-modal.show{display:flex;}
+.case-box{background:#fff;border-radius:14px;padding:20px 22px;width:320px;max-width:90vw;
+  box-shadow:0 20px 50px rgba(0,0,0,.25);}
+.case-box h4{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+.case-box .sub{font-size:11px;color:var(--ink3);line-height:1.6;margin-bottom:12px;}
+.case-box input{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;
+  font-size:13px;font-family:inherit;outline:none;margin-bottom:6px;}
+.case-box input:focus{border-color:var(--teal);}
+.case-box .prefill{font-size:10px;color:#0d9488;margin-bottom:12px;min-height:13px;}
+.case-box .row{display:flex;gap:8px;justify-content:flex-end;}
+.case-box .ok{border:none;background:var(--teal);color:#fff;border-radius:8px;padding:8px 16px;
+  font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+.case-box .cancel{border:1px solid var(--line);background:#fff;color:var(--ink3);border-radius:8px;
+  padding:8px 14px;font-size:12px;cursor:pointer;font-family:inherit;}
+.rail-in{border-top:1px solid var(--line);padding:10px 12px;display:flex;gap:8px;}
+.rail-in input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 11px;
+  font-size:12px;font-family:inherit;outline:none;}
+.rail-in button{border:none;background:var(--teal);color:#fff;border-radius:8px;padding:0 14px;
+  cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;}
+.settings{height:100%;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;
+  gap:12px;max-width:760px;}
+.set-note{font-size:10px;color:var(--ink3);background:var(--gold-bg);border:1px solid #fde68a;
+  border-radius:6px;padding:8px 12px;}
+textarea{width:100%;border:1px solid var(--line);border-radius:6px;padding:8px 10px;
+  font-size:12px;font-family:inherit;resize:vertical;}
+.exp-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid #f0f0f0;font-size:11px;}
+.exp-row:first-of-type{border-top:none;}
+.exp-tag{font-size:9px;font-weight:700;background:#ede9fe;color:#6d28d9;border-radius:99px;padding:2px 8px;}
+.btn-off{margin-left:auto;font-size:10px;border:1px solid #fca5a5;color:var(--red);
+  background:var(--red-bg);border-radius:5px;padding:3px 9px;cursor:pointer;font-family:inherit;}
+.note-banner{font-size:10px;color:var(--ink3);text-align:center;padding:8px;line-height:1.6;}
+@media(max-width:1000px){.detail{grid-template-columns:1fr;}.col-side{display:none;}
+  .spark-grid{grid-template-columns:repeat(2,1fr);}}
+
+/* ── Copilot 例句選單 ── */
+.ask-menu{padding:10px 12px;border-bottom:1px solid var(--line);background:#fafbfc;max-height:42vh;overflow-y:auto;flex-shrink:0;}
+.am-hd{font-size:11px;font-weight:700;color:var(--ink2);margin-bottom:8px;}
+.am-group{margin-bottom:10px;}
+.am-group:last-child{margin-bottom:0;}
+.am-label{font-size:9px;font-weight:700;color:var(--ink3);letter-spacing:.05em;margin-bottom:5px;}
+.am-chip{display:inline-block;font-size:11px;padding:5px 10px;margin:0 4px 4px 0;border-radius:99px;
+  border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--ink2);line-height:1.3;}
+.am-chip:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-bg);}
+.am-toggle{font-size:10px;color:var(--teal);cursor:pointer;text-align:center;padding:4px;
+  border-top:1px solid var(--line);background:#fafbfc;}
+
+/* ── 打包卡片視覺回饋 ── */
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(13,148,136,.5)}100%{box-shadow:0 0 0 14px rgba(13,148,136,0)}}
+.pin-title{outline:none;border-bottom:1px dashed transparent;cursor:text;}
+.pin-title:hover,.pin-title:focus{border-bottom-color:#0d9488;}
+.pin-new{font-size:8px;font-weight:700;padding:1px 6px;border-radius:99px;background:#dcfce7;color:#166534;}
+.pin-btn:disabled{background:#f3f4f6;border-color:var(--line);color:var(--ink3);}
+
+/* ══ FDC ML 分析頁 ══ */
+.fdc-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;
+  align-items:center;justify-content:center;z-index:80;padding:20px;}
+.fdc-overlay.show{display:flex;}
+.fdc-card{background:#fff;border-radius:14px;width:900px;max-width:96vw;max-height:92vh;
+  display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.3);}
+.fdc-hd{background:#0f1f3d;color:#fff;padding:12px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.fdc-hd-t{font-size:14px;font-weight:700;}
+.fdc-hd-s{font-size:10px;color:#94a3b8;}
+.fdc-close{margin-left:auto;background:none;border:none;color:#94a3b8;font-size:16px;
+  cursor:pointer;font-family:inherit;}
+.fdc-body{flex:1;overflow-y:auto;padding:16px 18px;}
+.ml-badge{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:700;
+  padding:3px 9px;border-radius:99px;background:#ede9fe;color:#6d28d9;}
+/* 圖表 */
+.chart-wrap{background:#fafbfc;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;}
+.chart-hd{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;
+  color:var(--ink2);margin-bottom:10px;flex-wrap:wrap;}
+.seg-legend{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;font-size:9px;color:var(--ink3);}
+.seg-legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:3px;}
+/* 分段結果 */
+.seg{border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:8px;background:#fff;}
+.seg-hd{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;margin-bottom:5px;flex-wrap:wrap;}
+.pat{font-size:9px;font-weight:700;padding:2px 8px;border-radius:99px;}
+.p-stable{background:#dcfce7;color:#166534;}
+.p-trend{background:#fef3c7;color:#92400e;}
+.p-shift{background:#fee2e2;color:#991b1b;}
+.p-multi{background:#e0e7ff;color:#3730a3;}
+.p-skew{background:#fce7f3;color:#9d174d;}
+.p-tail{background:#f3e8ff;color:#6b21a8;}
+.seg-stat{font-size:10px;color:var(--ink3);font-family:var(--mono);}
+.seg-evt{font-size:10.5px;color:var(--ink2);margin-top:5px;padding:5px 8px;background:#fffdf5;
+  border-left:2px solid #fbbf24;border-radius:4px;line-height:1.6;}
+.seg-evt b{color:#92400e;}
+/* baseline */
+.baseline{border:1px solid #fca5a5;background:var(--red-bg);border-radius:9px;padding:11px 13px;margin-bottom:12px;}
+.bl-hd{font-size:12px;font-weight:700;color:#991b1b;margin-bottom:5px;}
+.bl-body{font-size:11.5px;color:var(--ink2);line-height:1.7;}
+/* 總結 */
+.summary{border:1px solid #99f6e4;background:var(--teal-bg);border-radius:9px;padding:12px 14px;margin-bottom:12px;}
+.sum-hd{font-size:11px;font-weight:700;color:#115e59;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.sum-body{font-size:12px;color:var(--ink2);line-height:1.8;}
+/* 回饋 */
+.fb-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--line);
+  background:#fafbfc;flex-shrink:0;flex-wrap:wrap;}
+.fb-btn{font-size:12px;padding:6px 14px;border-radius:7px;border:1px solid var(--line);
+  background:#fff;cursor:pointer;font-family:inherit;}
+.fb-btn:hover{border-color:var(--teal);color:var(--teal);}
+.fb-btn.bad:hover{border-color:var(--red);color:var(--red);}
+.fb-panel{display:none;padding:12px 14px;background:#fffbeb;border-top:1px solid #fde68a;flex-shrink:0;}
+.fb-panel.show{display:block;}
+.fb-q{font-size:11px;font-weight:700;color:#92400e;margin-bottom:8px;}
+.fb-opt{display:block;font-size:11.5px;padding:7px 10px;margin-bottom:5px;border:1px solid #fde68a;
+  border-radius:7px;background:#fff;cursor:pointer;color:var(--ink2);}
+.fb-opt:hover{border-color:var(--gold);background:#fffdf5;}
+.fb-done{font-size:11px;color:var(--teal);font-weight:700;padding:8px 0;}
+
+/* ── 受控回饋表單 ── */
+.fx-form{padding:12px 14px;background:#fffbeb;border-top:1px solid #fde68a;}
+.fx-row{margin-bottom:10px;}
+.fx-lbl{font-size:10px;font-weight:700;color:#92400e;letter-spacing:.04em;margin-bottom:4px;display:block;}
+.fx-sel{width:100%;border:1px solid #fde68a;border-radius:6px;padding:7px 9px;font-size:12px;
+  font-family:inherit;background:#fff;outline:none;cursor:pointer;}
+.fx-sel:focus{border-color:var(--gold);}
+.fx-hint{font-size:9.5px;color:#9ca3af;margin-top:3px;line-height:1.5;}
+.fx-actions{display:flex;gap:8px;margin-top:10px;}
+.fx-submit{flex:1;border:none;background:var(--gold);color:#fff;border-radius:7px;padding:8px;
+  font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.fx-cancel{border:1px solid var(--line);background:#fff;color:var(--ink3);border-radius:7px;
+  padding:8px 14px;font-size:12px;cursor:pointer;font-family:inherit;}
+.tax-note{font-size:9.5px;color:var(--ink3);background:#fff;border:1px dashed var(--line);
+  border-radius:6px;padding:7px 9px;margin-bottom:10px;line-height:1.6;}
+.dual-tag{display:inline-flex;gap:3px;}
+.pat-t{background:#e0e7ff;color:#3730a3;}
+.pat-d{background:#fce7f3;color:#9d174d;}
+
+/* ══ t chart 分析 ══ */
+.tc-tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:12px;}
+.tc-tab{padding:7px 14px;font-size:11px;font-weight:700;cursor:pointer;color:var(--ink3);
+  border-bottom:2px solid transparent;}
+.tc-tab.on{color:var(--teal);border-bottom-color:var(--teal);}
+.tc-pane{display:none;}
+.tc-pane.on{display:block;}
+.drill{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:9px 12px;
+  font-size:11px;color:#075985;margin-bottom:12px;line-height:1.7;}
+.drill b{color:#0c4a6e;}
+/* recipe step 條 */
+.rcp-bar{display:flex;height:26px;border-radius:6px;overflow:hidden;margin-bottom:4px;
+  border:1px solid var(--line);}
+.rcp-step{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;
+  color:#fff;cursor:pointer;border-right:1px solid rgba(255,255,255,.4);transition:opacity .15s;}
+.rcp-step:hover{opacity:.82;}
+.rcp-step.bad{animation:pulse-bad 1.6s infinite;}
+@keyframes pulse-bad{0%,100%{box-shadow:inset 0 0 0 0 rgba(255,255,255,.6)}
+  50%{box-shadow:inset 0 0 0 3px rgba(255,255,255,.75)}}
+.rcp-axis{display:flex;font-size:8px;color:var(--ink3);margin-bottom:10px;}
+/* 段落分析卡 */
+.tseg{border:1px solid var(--line);border-radius:9px;padding:11px 13px;margin-bottom:8px;}
+.tseg.bad{border-color:#fca5a5;background:var(--red-bg);}
+.tseg.known{border-color:#99f6e4;background:var(--teal-bg);}
+.tseg-hd{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;margin-bottom:6px;flex-wrap:wrap;}
+.tseg-tag{font-size:9px;font-weight:700;padding:2px 8px;border-radius:99px;}
+.tg-ok{background:#dcfce7;color:#166534;}
+.tg-bad{background:#fee2e2;color:#991b1b;}
+.tg-loss{background:#fef3c7;color:#92400e;}
+.tg-hit{background:#ccfbf1;color:#115e59;}
+.tseg-body{font-size:11.5px;color:var(--ink2);line-height:1.75;}
+.tseg-cmp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:7px;font-size:11px;}
+.cmp-box{background:#fff;border:1px solid var(--line);border-radius:6px;padding:7px 9px;}
+.cmp-lbl{font-size:9px;color:var(--ink3);font-weight:700;letter-spacing:.04em;}
+.cmp-val{font-family:var(--mono);font-weight:700;margin-top:2px;}
+.chain{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:10px;margin-top:8px;
+  padding-top:8px;border-top:1px dashed var(--line);}
+.chain-node{padding:3px 9px;border-radius:6px;background:#fff;border:1px solid var(--line);font-weight:700;}
+.chain-arrow{color:var(--ink3);}
+.chain-node.part{border-color:#93c5fd;color:#1e40af;background:#eff6ff;}
+.chain-node.sop{border-color:#99f6e4;color:#115e59;background:var(--teal-bg);cursor:pointer;}
+/* 標註表單 */
+.annot{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:11px 13px;margin-top:8px;}
+.annot-hd{font-size:11px;font-weight:700;color:#92400e;margin-bottom:8px;}
+.annot-row{margin-bottom:8px;}
+.annot-lbl{font-size:9.5px;font-weight:700;color:#92400e;display:block;margin-bottom:3px;}
+.annot-sel{width:100%;border:1px solid #fde68a;border-radius:6px;padding:6px 9px;font-size:11.5px;
+  font-family:inherit;background:#fff;outline:none;cursor:pointer;}
+.annot-txt{width:100%;border:1px solid #fde68a;border-radius:6px;padding:7px 9px;font-size:11.5px;
+  font-family:inherit;background:#fff;outline:none;resize:vertical;}
+.annot-btns{display:flex;gap:6px;margin-top:8px;}
+.annot-ok{flex:1;border:none;background:var(--gold);color:#fff;border-radius:6px;padding:7px;
+  font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+.annot-no{border:1px solid var(--line);background:#fff;color:var(--ink3);border-radius:6px;
+  padding:7px 12px;font-size:11.5px;cursor:pointer;font-family:inherit;}
+.flywheel{background:linear-gradient(135deg,#ecfdf7,#f0fdf4);border:1px solid #99f6e4;
+  border-radius:8px;padding:10px 13px;margin-top:8px;font-size:11px;color:#115e59;line-height:1.7;}
+
+/* ══ 深度分析：Scanner 空間指標 ══ */
+.dd-seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:12px;flex-wrap:wrap;}
+.dd-btn{flex:1;min-width:110px;padding:8px 6px;font-size:10.5px;font-weight:700;text-align:center;
+  cursor:pointer;background:#fff;color:var(--ink3);border-right:1px solid var(--line);}
+.dd-btn:last-child{border-right:none;}
+.dd-btn.on{background:#0f1f3d;color:#fff;}
+.dd-btn small{display:block;font-weight:400;font-size:8.5px;opacity:.75;margin-top:1px;}
+.dd-view{display:none;}
+.dd-view.on{display:block;}
+/* chuck 對比 */
+.chuck-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;}
+.chuck-box{border:1px solid var(--line);border-radius:9px;padding:10px;background:#fff;}
+.chuck-hd{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;margin-bottom:6px;}
+.chuck-tag{font-size:8.5px;font-weight:700;padding:1px 7px;border-radius:99px;background:#e0e7ff;color:#3730a3;}
+.verdict{border-radius:9px;padding:11px 13px;margin-bottom:12px;font-size:11.5px;line-height:1.75;}
+.v-same{background:#fef2f2;border:1px solid #fca5a5;color:#7f1d1d;}
+.v-diff{background:#fffbeb;border:1px solid #fde68a;color:#78350f;}
+.verdict b{font-weight:700;}
+.fork{background:#fff;border-radius:7px;padding:8px 10px;margin-top:7px;font-size:11px;line-height:1.7;}
+.fork-arm{padding:3px 0;color:var(--ink2);}
+.fork-arm.on{font-weight:700;color:#0f1f3d;}
+.fork-arm.off{opacity:.4;text-decoration:line-through;}
+/* pattern 標籤 */
+.sp-tag{font-size:9px;font-weight:700;padding:2px 8px;border-radius:99px;}
+.sp-bowl{background:#dbeafe;color:#1e40af;}
+.sp-tilt{background:#fef3c7;color:#92400e;}
+.sp-edge{background:#fee2e2;color:#991b1b;}
+.sp-rand{background:#f3f4f6;color:#6b7280;}
+.sp-sym{background:#dcfce7;color:#166534;}
+.map-note{font-size:9.5px;color:var(--ink3);text-align:center;margin-top:5px;line-height:1.5;}
+.metric{display:flex;gap:10px;font-size:10px;font-family:var(--mono);color:var(--ink2);
+  margin-top:6px;flex-wrap:wrap;justify-content:center;}
+.suspect{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);}
+.sus-node{font-size:10px;padding:3px 9px;border-radius:6px;background:#eff6ff;border:1px solid #93c5fd;
+  color:#1e40af;font-weight:700;}
+.sus-node.sop{background:var(--teal-bg);border-color:#99f6e4;color:#115e59;cursor:pointer;}
+
+/* ══ 關聯圖 ══ */
+.gr-tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:10px;}
+.gr-tab{padding:7px 13px;font-size:11px;font-weight:700;cursor:pointer;color:var(--ink3);
+  border-bottom:2px solid transparent;}
+.gr-tab.on{color:var(--teal);border-bottom-color:var(--teal);}
+.gr-pane{display:none;}
+.gr-pane.on{display:block;}
+.gr-canvas{background:#fafbfc;border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;}
+.gr-legend{display:flex;gap:12px;font-size:9.5px;color:var(--ink3);margin-top:8px;flex-wrap:wrap;align-items:center;}
+.gr-legend b{color:var(--ink2);}
+.ln-sample{display:inline-block;width:22px;height:0;border-top:2px solid;vertical-align:middle;margin-right:3px;}
+/* 建圖 */
+.build-step{display:flex;gap:9px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;
+  margin-bottom:7px;font-size:11.5px;align-items:flex-start;background:#fff;}
+.bs-num{width:19px;height:19px;border-radius:50%;background:#0f1f3d;color:#fff;font-size:10px;
+  font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.bs-num.done{background:#16a34a;}
+.bs-num.wait{background:#d97706;}
+.bs-body{flex:1;line-height:1.65;color:var(--ink2);}
+.bs-body b{color:var(--ink);}
+.conf-hi{font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:99px;background:#dcfce7;color:#166534;}
+.conf-lo{font-size:8.5px;font-weight:700;padding:1px 6px;border-radius:99px;background:var(--gold-bg);color:#92400e;}
+/* 待確認清單 */
+.pending-edge{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px dashed #fde68a;
+  border-radius:7px;margin-bottom:5px;font-size:11px;background:#fffdf5;}
+.pe-rel{font-family:var(--mono);font-weight:700;font-size:11px;}
+.pe-btns{margin-left:auto;display:flex;gap:4px;}
+.pe-yes{font-size:10px;border:1px solid #86efac;background:#f0fdf4;color:#166534;border-radius:5px;
+  padding:3px 9px;cursor:pointer;font-family:inherit;font-weight:700;}
+.pe-no{font-size:10px;border:1px solid #fca5a5;background:var(--red-bg);color:#991b1b;border-radius:5px;
+  padding:3px 9px;cursor:pointer;font-family:inherit;}
+/* 查詢結果 */
+.cand{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--line);
+  border-radius:8px;margin-bottom:6px;font-size:11.5px;background:#fff;}
+.cand-rank{width:20px;height:20px;border-radius:5px;font-size:10px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;}
+.cand-body{flex:1;line-height:1.6;}
+.cand-src{font-size:9px;padding:1px 7px;border-radius:99px;font-weight:700;}
+.src-phy{background:#e0e7ff;color:#3730a3;}
+.src-exp{background:#ccfbf1;color:#115e59;}
+.src-both{background:#fef3c7;color:#92400e;}
+.cand-fb{display:flex;gap:4px;margin-left:auto;}
+.fb-y{font-size:11px;border:1px solid var(--line);background:#fff;border-radius:5px;padding:3px 8px;
+  cursor:pointer;font-family:inherit;}
+.fb-y:hover{border-color:#16a34a;background:#f0fdf4;}
+.fb-n:hover{border-color:#dc2626;background:var(--red-bg);}
+.weight-bar{height:4px;border-radius:2px;background:#e2e5ea;margin-top:4px;overflow:hidden;}
+.weight-fill{height:100%;background:#0d9488;}
+.grow{background:linear-gradient(135deg,#ecfdf7,#f0fdf4);border:1px solid #99f6e4;border-radius:8px;
+  padding:10px 12px;font-size:11px;color:#115e59;line-height:1.75;margin-top:8px;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-name">Tool Center</div>
+    <div class="hdr-sub">Fab1 · 設備 AI 助理</div>
+  </div>
+  <span class="ctl-label" style="margin-left:16px">課別</span>
+  <select id="fSection" class="ctl-sel">
+    <option value="LITHO-02">黃光二課 LITHO-02（我的課別）</option>
+    <option value="LITHO-01" disabled>黃光一課 LITHO-01（需支援權限）</option>
+    <option value="ETCH-01" disabled>蝕刻一課 ETCH-01（需支援權限）</option>
+  </select>
+  <span class="perm-note">預設帶入所屬課別 · 開支援權限才能跨課</span>
+  <button class="gear" onclick="showSettings()">⚙ 課別設定</button>
+</div>
+
+<div class="ctrlbar">
+  <label>檢視</label>
+  <select id="fMode" onchange="render()">
+    <option value="overview">🧱 機台一覽（全部）</option>
+    <option value="live">🔴 當機處理</option>
+    <option value="hist">📈 病史分析</option>
+    <option value="diag">🔬 深度診斷</option>
+  </select>
+  <label>機台</label>
+  <select id="fMachine" onchange="render()">
+    <option value="SCN-A01">SCN-A01 · Scanner（DOWN）</option>
+    <option value="SCN-A02">SCN-A02 · Scanner（LOST）</option>
+    <option value="SCN-A03">SCN-A03 · Scanner（UP）</option>
+    <option value="TRK-B01">TRK-B01 · Track（UP）</option>
+    <option value="TRK-B02">TRK-B02 · Track（PM）</option>
+    <option value="TRK-B03">TRK-B03 · Track（LOST）</option>
+    <option value="OVL-C01">OVL-C01 · Overlay（WEQ）</option>
+    <option value="CD-C02">CD-C02 · CD-SEM（OFF）</option>
+  </select>
+  <span class="fb-note" id="note">一覽模式：機台欄位停用</span>
+</div>
+
+<div class="result">
+
+  <div class="pane on" id="pane-overview">
+    <div class="forest">
+      <div class="f-top">
+        <div class="f-title">黃光二課 · 8 台 · <span style="color:#dc2626">DOWN 1</span> · <span style="color:#1e3a8a">LOST 2</span> · <span style="color:#0284c7">PM 1</span></div>
+        <div class="legend">
+          <span class="lg"><i class="st-UP"></i>UP</span>
+          <span class="lg"><i class="st-DOWN"></i>DOWN</span>
+          <span class="lg"><i class="st-OFF"></i>OFF</span>
+          <span class="lg"><i class="st-WEQ"></i>WEQ</span>
+          <span class="lg"><i class="st-PM"></i>PM</span>
+          <span class="lg"><i class="st-LOST"></i>LOST</span>
+        </div>
+      </div>
+      <div class="bricks">
+        <div class="brick st-DOWN" onclick="openTool('SCN-A01')">
+          <div class="bk-name">SCN-A01</div>
+          <div class="bk-type">Scanner · XT-1900i</div>
+          <div class="bk-stat">7日 alarm 2 · MTBI 82h</div>
+          <div class="bk-st">DOWN</div>
+          <div class="chs"><span class="ch st-DOWN">EXP</span><span class="ch st-UP">MA</span></div>
+        </div>
+        <div class="brick st-LOST" onclick="openTool('SCN-A02')">
+          <div class="bk-name">SCN-A02</div>
+          <div class="bk-type">Scanner · XT-1900i</div>
+          <div class="bk-stat">7日 alarm 11 · FOCUS-DRIFT 7 成</div>
+          <div class="bk-st">LOST</div>
+          <div class="chs"><span class="ch st-LOST">EXP</span><span class="ch st-UP">MA</span></div>
+        </div>
+        <div class="brick st-UP" onclick="openTool('SCN-A03')">
+          <div class="bk-name">SCN-A03</div>
+          <div class="bk-type">Scanner · XT-1900i</div>
+          <div class="bk-stat">7日 alarm 3 · MTBI 61h</div>
+          <div class="bk-st">UP</div>
+          <div class="chs"><span class="ch st-UP">EXP</span><span class="ch st-WEQ">MA</span></div>
+        </div>
+        <div class="brick st-UP" onclick="openTool('TRK-B01')">
+          <div class="bk-name">TRK-B01</div>
+          <div class="bk-type">Track · ACT12</div>
+          <div class="bk-stat">7日 alarm 4 · MTBI 48h</div>
+          <div class="bk-st">UP</div>
+          <div class="chs"><span class="ch st-UP">COT1</span><span class="ch st-PM">COT2</span><span class="ch st-UP">DEV1</span><span class="ch st-UP">DEV2</span></div>
+        </div>
+        <div class="brick st-PM" onclick="openTool('TRK-B02')">
+          <div class="bk-name">TRK-B02</div>
+          <div class="bk-type">Track · ACT12</div>
+          <div class="bk-stat">PM 中 · 待料</div>
+          <div class="bk-st">PM</div>
+          <div class="chs"><span class="ch st-PM">COT1</span><span class="ch st-PM">COT2</span><span class="ch st-OFF">DEV1</span></div>
+        </div>
+        <div class="brick st-LOST" onclick="openTool('TRK-B03')">
+          <div class="bk-name">TRK-B03</div>
+          <div class="bk-type">Track · ACT12</div>
+          <div class="bk-stat">7日 alarm 8 · PUMP-LOW 5 成</div>
+          <div class="bk-st">LOST</div>
+          <div class="chs"><span class="ch st-LOST">COT1</span><span class="ch st-UP">DEV1</span></div>
+        </div>
+        <div class="brick st-WEQ" onclick="openTool('OVL-C01')">
+          <div class="bk-name">OVL-C01</div>
+          <div class="bk-type">Overlay · KLA Archer</div>
+          <div class="bk-stat">7日 alarm 2 · MTBI 70h</div>
+          <div class="bk-st">WEQ</div>
+          <div class="chs"><span class="ch st-WEQ">M1</span></div>
+        </div>
+        <div class="brick st-OFF" onclick="openTool('CD-C02')">
+          <div class="bk-name">CD-C02</div>
+          <div class="bk-type">CD-SEM · CG5000</div>
+          <div class="bk-stat">7日 alarm 0</div>
+          <div class="bk-st">OFF</div>
+          <div class="chs"><span class="ch st-OFF">M1</span></div>
+        </div>
+      </div>
+      <div class="note-banner">大格＝機台 · 小格＝chamber · 底色＝狀態（兩者可不同，色義一致）· 點 brick 直接進入</div>
+    </div>
+  </div>
+
+  <div class="pane" id="pane-live">
+    <div class="detail">
+      <div class="col-main">
+        <div class="zone">
+          <div class="zone-hd">Tool Command<span class="hint">人下的註解 · 這台現在為什麼不動</span></div>
+          <div class="tcmd"><span class="tcmd-tag">WAIT</span> wait particle result<span class="tcmd-meta">小王 · 02:40 · 預計 3hr</span></div>
+          <div class="tcmd"><span class="tcmd-tag">WAIT</span> wait parts（GV-2 閥件，明日到貨）<span class="tcmd-meta">陳工 · 03:10</span></div>
+          <div class="add-btn" onclick="alert('（示意）新增：wait confirm lot result / wait PE / wait vendor')">+ 新增 Tool Command</div>
+        </div>
+
+        <div class="zone">
+          <div class="zone-hd">最近 Error Case
+            <span class="chip-chronic" onclick="ask('慢性問題偵測')">⚠ 2 個慢性問題</span>
+          </div>
+          <div class="evt">
+            <span class="evt-dot" style="background:#dc2626"></span>
+            <div><div class="evt-title">FOCUS-DRIFT-011 · Focus error 緩升超 UCL</div>
+              <div class="evt-meta">02:14 · Case #C-0703-021 · 處理中（小王）</div></div>
+            <span class="evt-right" style="display:flex;gap:5px">
+              <button class="btn-sm btn-ai" onclick="openFDC('u')">📊 u chart</button>
+              <button class="btn-sm btn-ai" onclick="openFDC('t')">📉 t chart</button>
+            </span>
+          </div>
+          <div class="evt">
+            <span class="evt-dot" style="background:#d97706"></span>
+            <div><div class="evt-title">STAGE-VIB-003 · Stage 振動尖峰</div>
+              <div class="evt-meta">02:14 · 同窗期第 2 發（60 秒限流）</div></div>
+            <span class="evt-right"><button class="btn-sm" onclick="ask('log 珍寶分析')">手動判讀</button></span>
+          </div>
+          <div class="evt" style="opacity:.65">
+            <span class="evt-dot" style="background:#9ca3af"></span>
+            <div><div class="evt-title">DOSE-WARN-007 · 已結案</div>
+              <div class="evt-meta">昨日 14:20 · 根因：光源老化 · 陳工</div></div>
+            <span class="evt-right"><button class="btn-sm btn-ai" onclick="alert('（示意）驗屍打包：自動快照 FDC/趨勢/換件料號/處理紀錄 → 存入案例庫。你只按確認。')">🔒 打包案例</button></span>
+          </div>
+          <div class="note-banner" style="text-align:left;padding:6px 0 0">慢性偵測＝rule base（同 code 90 天 ≥3 次），零 LLM · 點徽章才問 Copilot</div>
+        </div>
+
+        
+
+        <div class="zone">
+          <div class="zone-hd">機台抓回檔案<span class="hint">預設 24 小時內 · 勾選讓 iDo 參考</span></div>
+          <div class="file">
+            <span>📘</span>
+            <div><div class="file-name">ASML log book</div><div class="file-meta">來源：/SCN-A01/logbook · 更新 今日 03:20</div></div>
+            <span class="file-actions">
+              <a class="file-dl" onclick="alert('（示意）下載 ASML log book')">⤓ 下載</a>
+              <label class="file-ref on"><input type="checkbox" checked onchange="toggleRef(this)"> iDo 參考</label>
+            </span>
+          </div>
+          <div class="file">
+            <span>📄</span>
+            <div><div class="file-name">AWE.LXX001.01</div><div class="file-meta">來源：/SCN-A01/awe · 更新 今日 02:48</div></div>
+            <span class="file-actions">
+              <a class="file-dl" onclick="alert('（示意）下載 AWE.LXX001.01')">⤓ 下載</a>
+              <label class="file-ref on"><input type="checkbox" checked onchange="toggleRef(this)"> iDo 參考</label>
+            </span>
+          </div>
+          <div class="file">
+            <span>📑</span>
+            <div><div class="file-name">lot report.LXX001.01</div><div class="file-meta">來源：/SCN-A01/lot_report · 更新 今日 01:05</div></div>
+            <span class="file-actions">
+              <a class="file-dl" onclick="alert('（示意）下載 lot report.LXX001.01')">⤓ 下載</a>
+              <label class="file-ref"><input type="checkbox" onchange="toggleRef(this)"> iDo 參考</label>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-side">
+        <div class="zone">
+          <div class="zone-hd">機台屬性</div>
+          <dl class="attrs">
+            <div><dt>TOOL TYPE</dt><dd>Scanner</dd></div>
+            <div><dt>TOOL GROUP</dt><dd>LITHO-SCN</dd></div>
+            <div><dt>VENDOR</dt><dd>ASML</dd></div>
+            <div><dt>MODEL</dt><dd>XT-1900i</dd></div>
+            <div><dt>FAB</dt><dd>Fab1</dd></div>
+            <div><dt>IP</dt><dd>10.32.4.101</dd></div>
+            <div><dt>FDC MODE</dt><dd>Online-Full</dd></div>
+            <div><dt>TAP VER</dt><dd>v3.2.1</dd></div>
+            <div><dt>TCS VER</dt><dd>v5.0.4</dd></div>
+            <div><dt>OWNER PE</dt><dd>陳PE</dd></div>
+            <div><dt>OWNER EE</dt><dd>林EE</dd></div>
+            <div><dt>SPONSOR</dt><dd>老李</dd></div>
+          </dl>
+        </div>
+        <div class="zone">
+          <div class="zone-hd">快速提問<span class="hint">問 Copilot</span></div>
+          <div class="chips">
+            <span class="chip" onclick="ask('這次 alarm 的根因推測')">根因推測</span>
+            <span class="chip" onclick="ask('找相似歷史案例')">相似案例</span>
+            <span class="chip" onclick="ask('log 珍寶分析')">log 珍寶</span>
+            <span class="chip" onclick="ask('check the lot report which wafer have hot spot')">lot report 熱點</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pane" id="pane-hist">
+    <div class="detail">
+      <div class="col-main">
+        <div class="zone">
+          <div class="zone-hd">📌 已打包的分析<span class="hint">Copilot 問答成果 · 寫進 Case Center · 全課可見</span></div>
+          <div id="pinBox">
+            <div class="pinned">
+              <div class="pinned-hd">📌 Focus 漂移的 PM 週期相關性 <span class="skill-lv lv-private">個人 skill</span></div>
+              <div class="pinned-body">近三次 FOCUS-DRIFT 皆發生在 PM 後 2–4 天，PM 前 30 天內從未發生 → 高度懷疑 PM 程序引入偏差，非零件老化。</div>
+              <div class="pinned-meta"><span>小王 · 07/03</span><span>來源：fdc-query + case-query</span></div>
+            </div>
+            <div class="pinned">
+              <div class="pinned-hd">📌 GV-2 閥件更換後追蹤 <span class="skill-lv lv-common">課級 common</span></div>
+              <div class="pinned-body">GV-2 於 5/20 更換，至今 44 天無 VAC_INTERLOCK 復發（前期平均 8 天一次）→ 更換有效。</div>
+              <div class="pinned-meta"><span>陳工 · 07/03</span><span>來源：log-digest 頻率統計</span></div>
+            </div>
+          </div>
+          <div class="add-btn" onclick="alert('在 Copilot 問完問題後，按回答下方的「📌 打包到 case」，輸入 CASE ID 即可寫進 Case Center。若是從某個 case 叫出 Copilot，CASE ID 會自動帶入。')">📌 打包 Copilot 的回答 → 貼到這裡</div>
+        </div>
+      </div>
+      <div class="col-side">
+        <div class="zone">
+          <div class="zone-hd">問 Copilot<span class="hint">畫面放事實，分析靠問</span></div>
+          <div class="chips" style="flex-direction:column">
+            <span class="chip" onclick="ask('慢性問題偵測')">🔴 有沒有宿疾？</span>
+            <span class="chip" onclick="ask('狀況對比')">📊 這個月比上個月好還壞？</span>
+            <span class="chip" onclick="ask('PM 效果驗證')">🔧 PM 做完有真的變好嗎？</span>
+            <span class="chip" onclick="ask('根因閉環')">🔗 老毛病解了沒？</span>
+            <span class="chip" onclick="ask('這台跟同型機比起來如何')">⚖️ 跟同型機比，我這台特別爛嗎？</span>
+            <span class="chip" onclick="ask('這台的 alarm 有沒有時間規律')">🕐 alarm 有時間規律嗎？</span>
+            <span class="chip" onclick="ask('幫我生成這台的事件說明')">📄 幫我生成事件說明（晨會用）</span>
+          </div>
+          <div class="note-banner" style="text-align:left;padding:8px 0 0">問完按回答下方的 <b>📌 打包成卡片</b>，結論就會沉澱到左邊，全課看得到。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pane" id="pane-diag">
+    <div class="detail">
+      <div class="col-main">
+
+        <div class="zone">
+          <div class="zone-hd">Scanner 空間指標<span class="hint">肉眼先看 map · 數值是輔證 · ML 幫你認形狀</span></div>
+
+          <div class="dd-seg">
+            <div class="dd-btn on" id="ddb-ov" onclick="ddShow('ov')">Overlay FP<small>wafer level</small></div>
+            <div class="dd-btn" id="ddb-fo" onclick="ddShow('fo')">Focus FP<small>wafer level</small></div>
+            <div class="dd-btn" id="ddb-lv" onclick="ddShow('lv')">Leveling<small>hot spot</small></div>
+            <div class="dd-btn" id="ddb-fd" onclick="ddShow('fd')">Field Focus<small>repeating defocus</small></div>
+            <div class="dd-btn" id="ddb-sl" onclick="ddShow('sl')">Slit Aberration<small>左右哪邊死</small></div>
+            <div class="dd-btn" id="ddb-gr" onclick="ddShow('gr')">🕸 關聯圖<small>物理 × 經驗</small></div>
+          </div>
+
+          <!-- ═══ Overlay Fingerprint ═══ -->
+          <div class="dd-view on" id="ddv-ov">
+            <div class="verdict v-diff">
+              <b>⚖️ Dual Chuck 判定：分歧</b>（Chuck A 與 B 的 pattern 明顯不同）
+              <div class="fork">
+                <div class="fork-arm off">兩 chuck 一致 → 問題在共用系統（透鏡／光源／環境）</div>
+                <div class="fork-arm on">→ <b>兩 chuck 分歧 → 問題在 Chuck B 本身</b>（吸盤／leveling sensor／chuck 校正）</div>
+                <div style="font-size:10px;color:#9ca3af;margin-top:4px">這一刀切下去，排查範圍直接減半——這是 scanner domain 的基本功。</div>
+              </div>
+            </div>
+
+            <div class="chuck-row">
+              <div class="chuck-box">
+                <div class="chuck-hd">Chuck A <span class="chuck-tag">正常</span>
+                  <span class="sp-tag sp-rand" style="margin-left:auto">RANDOM</span></div>
+                <svg viewBox="0 0 160 160" style="width:100%;height:150px">
+                  <circle cx="80" cy="80" r="72" fill="#f8fafc" stroke="#e2e5ea"/>
+                  <g stroke="#16a34a" stroke-width="1.4">
+                    <line x1="50" y1="45" x2="53" y2="43"/><line x1="80" y1="40" x2="82" y2="41"/>
+                    <line x1="110" y1="45" x2="108" y2="44"/><line x1="40" y1="80" x2="42" y2="81"/>
+                    <line x1="80" y1="80" x2="81" y2="79"/><line x1="120" y1="80" x2="118" y2="81"/>
+                    <line x1="50" y1="115" x2="52" y2="116"/><line x1="80" y1="120" x2="79" y2="119"/>
+                    <line x1="110" y1="115" x2="112" y2="114"/><line x1="65" y1="60" x2="66" y2="61"/>
+                    <line x1="95" y1="60" x2="94" y2="59"/><line x1="65" y1="100" x2="67" y2="101"/>
+                    <line x1="95" y1="100" x2="93" y2="99"/>
+                  </g>
+                  <text x="80" y="155" text-anchor="middle" font-size="8" fill="#9ca3af">向量長度＝誤差大小</text>
+                </svg>
+                <div class="metric"><span>|M| 1.8nm</span><span>3σ 2.4nm</span><span>殘差隨機</span></div>
+              </div>
+
+              <div class="chuck-box" style="border-color:#fca5a5">
+                <div class="chuck-hd">Chuck B <span class="chuck-tag" style="background:#fee2e2;color:#991b1b">異常</span>
+                  <span class="sp-tag sp-tilt" style="margin-left:auto">TILT + EDGE ROLL-OFF</span></div>
+                <svg viewBox="0 0 160 160" style="width:100%;height:150px">
+                  <circle cx="80" cy="80" r="72" fill="#fef2f2" stroke="#fca5a5"/>
+                  <g stroke="#dc2626" stroke-width="1.6">
+                    <line x1="50" y1="45" x2="43" y2="38"/><line x1="80" y1="40" x2="80" y2="32"/>
+                    <line x1="110" y1="45" x2="117" y2="38"/><line x1="40" y1="80" x2="30" y2="80"/>
+                    <line x1="80" y1="80" x2="81" y2="79"/><line x1="120" y1="80" x2="130" y2="80"/>
+                    <line x1="50" y1="115" x2="43" y2="122"/><line x1="80" y1="120" x2="80" y2="128"/>
+                    <line x1="110" y1="115" x2="117" y2="122"/><line x1="65" y1="60" x2="62" y2="57"/>
+                    <line x1="95" y1="60" x2="98" y2="57"/><line x1="65" y1="100" x2="62" y2="103"/>
+                    <line x1="95" y1="100" x2="98" y2="103"/>
+                  </g>
+                  <text x="80" y="155" text-anchor="middle" font-size="8" fill="#dc2626">向量向外放射＝放大誤差</text>
+                </svg>
+                <div class="metric" style="color:#dc2626"><span>|M| 5.4nm</span><span>3σ 6.8nm</span><span>邊緣 8.2nm</span></div>
+              </div>
+            </div>
+
+            <div class="tseg known">
+              <div class="tseg-hd">ML 判定 <span class="tseg-tag tg-hit">✓ 命中歷史 case</span></div>
+              <div class="tseg-body">
+                Chuck B 呈 <b>TILT（單向傾斜）+ EDGE ROLL-OFF（邊緣塌陷）</b>，向量往外放射——典型的
+                <b>wafer 未完全吸附</b>造成的放大誤差。Chuck A 同批次同 recipe 完全正常 →
+                <b>排除透鏡、光源、環境</b>，鎖定 Chuck B 硬體。
+                <div class="suspect">
+                  <span class="sus-node">Chuck B 吸盤真空</span>
+                  <span class="sus-node">Chuck B leveling sensor</span>
+                  <span class="sus-node">Chuck B 表面異物</span>
+                  <span class="sus-node sop" onclick="ask('找相似歷史案例')">SOP C-11 Chuck 清潔校正</span>
+                </div>
+                <div class="flywheel">
+                  🔄 老李 3/22 標註過：「Chuck B edge roll-off + 吸附真空度偏低 = 吸盤 O-ring 老化」，
+                  更換後 overlay 3σ 從 6.9 降回 2.3nm。<b>這條知識是你們寫的，不是我推理的。</b>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ Focus Fingerprint ═══ -->
+          <div class="dd-view" id="ddv-fo">
+            <div class="verdict v-same">
+              <b>⚖️ Dual Chuck 判定：一致</b>（兩個 chuck 都呈相同 BOWL pattern）
+              <div class="fork">
+                <div class="fork-arm on">→ <b>兩 chuck 一致 → 問題在共用系統</b>（透鏡／光源／環境）</div>
+                <div class="fork-arm off">兩 chuck 分歧 → 問題在該 chuck 本身</div>
+                <div style="font-size:10px;color:#9ca3af;margin-top:4px">兩個 chuck 都壞成同一個形狀，不可能是巧合——共用的東西才會這樣。</div>
+              </div>
+            </div>
+
+            <div class="chuck-row">
+              <div class="chuck-box">
+                <div class="chuck-hd">Chuck A <span class="sp-tag sp-bowl" style="margin-left:auto">BOWL</span></div>
+                <svg viewBox="0 0 160 160" style="width:100%;height:150px">
+                  <defs><radialGradient id="bowlA"><stop offset="0%" stop-color="#1e40af"/>
+                    <stop offset="55%" stop-color="#93c5fd"/><stop offset="100%" stop-color="#fecaca"/></radialGradient></defs>
+                  <circle cx="80" cy="80" r="72" fill="url(#bowlA)"/>
+                  <circle cx="80" cy="80" r="72" fill="none" stroke="#e2e5ea"/>
+                  <circle cx="80" cy="80" r="30" fill="none" stroke="#fff" stroke-width=".8" opacity=".6"/>
+                  <circle cx="80" cy="80" r="52" fill="none" stroke="#fff" stroke-width=".8" opacity=".6"/>
+                </svg>
+                <div class="metric"><span>中心 -12nm</span><span>邊緣 +9nm</span><span>PV 21nm</span></div>
+              </div>
+              <div class="chuck-box">
+                <div class="chuck-hd">Chuck B <span class="sp-tag sp-bowl" style="margin-left:auto">BOWL</span></div>
+                <svg viewBox="0 0 160 160" style="width:100%;height:150px">
+                  <circle cx="80" cy="80" r="72" fill="url(#bowlA)"/>
+                  <circle cx="80" cy="80" r="72" fill="none" stroke="#e2e5ea"/>
+                  <circle cx="80" cy="80" r="30" fill="none" stroke="#fff" stroke-width=".8" opacity=".6"/>
+                  <circle cx="80" cy="80" r="52" fill="none" stroke="#fff" stroke-width=".8" opacity=".6"/>
+                </svg>
+                <div class="metric"><span>中心 -11nm</span><span>邊緣 +10nm</span><span>PV 21nm</span></div>
+              </div>
+            </div>
+            <div class="map-note">🔵 負離焦（低）　🔴 正離焦（高）　同心圓 = 碗狀 pattern</div>
+
+            <div class="tseg bad">
+              <div class="tseg-hd">ML 判定 <span class="tseg-tag" style="background:#f3f4f6;color:#6b7280">KM 無紀錄</span></div>
+              <div class="tseg-body">
+                兩 chuck 皆呈 <b>BOWL（碗狀）</b>：中心離焦 -12nm、邊緣 +9nm，PV 21nm。
+                對稱且一致 → 共用系統問題。<br><br>
+                <b style="color:#4b5563">❓ KM 裡沒有這台機 BOWL pattern 的處理紀錄。</b>
+                我知道 pattern 是什麼形狀，<b>但不知道你們這台的 BOWL 通常是什麼原因</b>——是透鏡加熱？
+                環境氣壓？還是 chuck 平整度共同劣化？<span style="color:#0d9488">我不猜，等你標註。</span>
+                <div class="suspect">
+                  <span class="sus-node">投影透鏡（熱效應？）</span>
+                  <span class="sus-node">環境氣壓補償</span>
+                  <span class="sus-node">兩 chuck 共同劣化？</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ Leveling ═══ -->
+          <div class="dd-view" id="ddv-lv">
+            <div class="verdict v-diff">
+              <b>⚖️ Dual Chuck 判定：分歧</b> — Chuck B 有 hot spot，Chuck A 平坦
+            </div>
+            <div class="chuck-row">
+              <div class="chuck-box">
+                <div class="chuck-hd">Chuck A <span class="sp-tag sp-sym" style="margin-left:auto">FLAT</span></div>
+                <svg viewBox="0 0 160 160" style="width:100%;height:150px">
+                  <circle cx="80" cy="80" r="72" fill="#dcfce7" stroke="#e2e5ea"/>
+                  <text x="80" y="84" text-anchor="middle" font-size="10" fill="#166534">平坦</text>
+                </svg>
+                <div class="metric"><span>PV 1.8µm</span><span>無 hot spot</span></div>
+              </div>
+              <div class="chuck-box" style="border-color:#fca5a5">
+                <div class="chuck-hd">Chuck B <span class="sp-tag sp-edge" style="margin-left:auto">HOT SPOT ×2</span></div>
+                <svg viewBox="0 0 160 160" style="width:100%;height:150px">
+                  <circle cx="80" cy="80" r="72" fill="#f0fdf4" stroke="#fca5a5"/>
+                  <circle cx="55" cy="55" r="16" fill="#dc2626" opacity=".75"/>
+                  <circle cx="112" cy="98" r="11" fill="#f87171" opacity=".7"/>
+                  <text x="55" y="58" text-anchor="middle" font-size="8" fill="#fff" font-weight="700">+4.2</text>
+                  <text x="112" y="101" text-anchor="middle" font-size="7" fill="#fff" font-weight="700">+2.8</text>
+                </svg>
+                <div class="metric" style="color:#dc2626"><span>PV 5.9µm</span><span>hot spot ×2</span></div>
+              </div>
+            </div>
+            <div class="map-note">Hot spot＝該處 wafer 被墊高 → 局部離焦 → 對應 field 的 CD 異常</div>
+            <div class="tseg known">
+              <div class="tseg-hd">ML 判定 <span class="tseg-tag tg-hit">✓ 高信心</span></div>
+              <div class="tseg-body">
+                Chuck B 有 2 個 hot spot（+4.2µm / +2.8µm），位置固定（每片都在同座標）→
+                <b>不是 wafer 問題，是 chuck 表面問題</b>（異物或凹凸）。
+                <div class="suspect">
+                  <span class="sus-node">Chuck B 表面異物</span>
+                  <span class="sus-node">Burl 磨損</span>
+                  <span class="sus-node sop" onclick="ask('找相似歷史案例')">SOP C-11 Chuck 清潔</span>
+                </div>
+                <div class="flywheel">
+                  🔗 <b>與 Overlay FP 的判定一致</b>——兩個指標都指向 Chuck B 硬體。
+                  交叉驗證通過，信心提升。
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ Field Focus ═══ -->
+          <div class="dd-view" id="ddv-fd">
+            <div class="verdict v-same">
+              <b>⚖️ Dual Chuck 判定：一致</b> — 兩 chuck 的 field 內分布相同 → 共用系統
+            </div>
+            <div class="chuck-box" style="max-width:420px;margin:0 auto 10px">
+              <div class="chuck-hd">Field 內 focus 分布（疊合所有 field）
+                <span class="sp-tag sp-tilt" style="margin-left:auto">REPEATING · SCAN-DIR TILT</span></div>
+              <svg viewBox="0 0 300 130" style="width:100%;height:130px">
+                <rect x="20" y="15" width="260" height="95" fill="#f8fafc" stroke="#e2e5ea"/>
+                <defs><linearGradient id="fdG" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#dc2626" stop-opacity=".55"/>
+                  <stop offset="50%" stop-color="#fff" stop-opacity=".2"/>
+                  <stop offset="100%" stop-color="#1e40af" stop-opacity=".55"/></linearGradient></defs>
+                <rect x="20" y="15" width="260" height="95" fill="url(#fdG)"/>
+                <text x="150" y="12" text-anchor="middle" font-size="8" fill="#dc2626">scan 起點 +7nm</text>
+                <text x="150" y="122" text-anchor="middle" font-size="8" fill="#1e40af">scan 終點 -6nm</text>
+                <text x="8" y="65" font-size="8" fill="#9ca3af" transform="rotate(-90 8 65)">slit</text>
+              </svg>
+              <div class="metric"><span>field 內 PV 13nm</span><span>每個 field 都一樣</span></div>
+            </div>
+            <div class="map-note">Repeating defocus：每個 field 的<b>同一位置</b>都偏 → 系統性，非隨機</div>
+            <div class="tseg bad">
+              <div class="tseg-hd">ML 判定 <span class="tseg-tag tg-bad">系統性偏差</span></div>
+              <div class="tseg-body">
+                Field 內沿 <b>scan 方向</b>呈線性傾斜（起點 +7nm → 終點 -6nm），且<b>每個 field 都重複</b>。
+                兩 chuck 一致 → 與 chuck 無關。
+                <b>掃描過程中 focus 追不上</b>——可能是 leveling 即時補償的動態響應問題。
+                <div class="suspect">
+                  <span class="sus-node">Level sensor 動態響應</span>
+                  <span class="sus-node">Scan stage 同步</span>
+                  <span class="sus-node">Focus servo 增益</span>
+                  <span class="sus-node sop" onclick="ask('這次 alarm 的根因推測')">SOP L-07</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ Slit Aberration ═══ -->
+          <div class="dd-view" id="ddv-sl">
+            <div class="verdict v-same">
+              <b>⚖️ Dual Chuck 判定：一致</b> — 光學系統共用，chuck 無關
+            </div>
+            <div class="chuck-box" style="max-width:460px;margin:0 auto 10px">
+              <div class="chuck-hd">Slit 內像差分布（左 ← → 右）
+                <span class="sp-tag sp-tilt" style="margin-left:auto">ASYMMETRIC · 右偏</span></div>
+              <svg viewBox="0 0 340 120" style="width:100%;height:120px">
+                <line x1="20" y1="60" x2="320" y2="60" stroke="#e2e5ea"/>
+                <line x1="20" y1="30" x2="320" y2="30" stroke="#fca5a5" stroke-dasharray="4 3"/>
+                <text x="24" y="27" font-size="7" fill="#dc2626">spec +5nm</text>
+                <line x1="20" y1="90" x2="320" y2="90" stroke="#fca5a5" stroke-dasharray="4 3"/>
+                <polyline points="20,58 70,56 120,57 170,55 220,48 270,38 320,26"
+                  fill="none" stroke="#dc2626" stroke-width="2.5"/>
+                <circle cx="320" cy="26" r="4" fill="#dc2626"/>
+                <text x="20" y="112" font-size="8" fill="#9ca3af">左 slit</text>
+                <text x="290" y="112" font-size="8" fill="#dc2626" font-weight="700">右 slit 超規</text>
+                <text x="170" y="112" font-size="8" fill="#9ca3af" text-anchor="middle">中心</text>
+              </svg>
+              <div class="metric"><span>左 -0.2nm</span><span>中 +0.5nm</span><span style="color:#dc2626">右 +5.8nm（超規）</span></div>
+            </div>
+            <div class="map-note">Slit 內像差不對稱 → 透鏡場曲／像散在單側惡化</div>
+            <div class="tseg bad">
+              <div class="tseg-hd">ML 判定 <span class="tseg-tag tg-bad">右側惡化</span></div>
+              <div class="tseg-body">
+                像差沿 slit 由左向右單調惡化，右緣 <b>+5.8nm 超規</b>。
+                左側正常 → 不是整體透鏡劣化，是<b>單側光學元件</b>問題。
+                <div class="suspect">
+                  <span class="sus-node">投影透鏡右側元件</span>
+                  <span class="sus-node">照明均勻性</span>
+                  <span class="sus-node">Reticle stage 傾斜</span>
+                  <span class="sus-node sop" onclick="ask('找相似歷史案例')">需 ASML FSE 支援</span>
+                </div>
+                <div style="margin-top:8px;padding:8px 10px;background:var(--gold-bg);
+                  border:1px solid #fde68a;border-radius:6px;font-size:11px;color:#92400e;line-height:1.7">
+                  ⚠ <b>這超出課內可處理範圍</b>——透鏡校正需原廠 FSE。
+                  我可以幫你整理佐證資料（slit profile 趨勢、影響的 lot 清單）給 vendor，
+                  但<b>不會建議你自己動光學系統</b>。
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ 關聯圖 ═══ -->
+          <div class="dd-view" id="ddv-gr">
+
+            <div class="gr-tabs">
+              <div class="gr-tab on" id="grt-q" onclick="grTab('q')">🔍 查詢（診斷用）</div>
+              <div class="gr-tab" id="grt-b" onclick="grTab('b')">🏗 建圖（Agent 幫你四五成）</div>
+              <div class="gr-tab" id="grt-g" onclick="grTab('g')">📈 養肥（回饋讓它變準）</div>
+            </div>
+
+            <!-- ── 查詢 ── -->
+            <div class="gr-pane on" id="grp-q">
+              <div class="drill">
+                <b>兩層圖，分開查、分開顯示。</b><br>
+                <b style="color:#3730a3">物理層</b>＝機台架構（Day-1 就有，不需累積）　
+                <b style="color:#115e59">經驗層</b>＝歷史案例長出來的（越用越準）<br>
+                <span style="color:#9ca3af">不混在一起——你要知道它是「物理上連著」還是「歷史上一起壞過」。</span>
+              </div>
+
+              <div class="gr-canvas">
+                <div class="chart-hd">
+                  <span>查詢：chamber pressure 異常 → 可能是哪個零件？</span>
+                  <span class="ml-badge">graph-query MCP</span>
+                </div>
+                <svg viewBox="0 0 700 250" style="width:100%;height:250px">
+                  <!-- 物理邊（實線藍）-->
+                  <line x1="350" y1="125" x2="150" y2="55" stroke="#3730a3" stroke-width="2"/>
+                  <line x1="350" y1="125" x2="150" y2="125" stroke="#3730a3" stroke-width="2"/>
+                  <line x1="350" y1="125" x2="150" y2="195" stroke="#3730a3" stroke-width="2"/>
+                  <!-- 經驗邊（虛線綠，粗細=權重）-->
+                  <line x1="350" y1="125" x2="560" y2="55" stroke="#0d9488" stroke-width="5" stroke-dasharray="7 4"/>
+                  <line x1="350" y1="125" x2="560" y2="125" stroke="#0d9488" stroke-width="2.5" stroke-dasharray="7 4"/>
+                  <line x1="350" y1="125" x2="560" y2="195" stroke="#0d9488" stroke-width="1.2" stroke-dasharray="7 4"/>
+                  <!-- 中心 -->
+                  <circle cx="350" cy="125" r="42" fill="#fef2f2" stroke="#dc2626" stroke-width="2.5"/>
+                  <text x="350" y="120" text-anchor="middle" font-size="11" fill="#991b1b" font-weight="700">chamber</text>
+                  <text x="350" y="134" text-anchor="middle" font-size="11" fill="#991b1b" font-weight="700">pressure</text>
+                  <!-- 物理節點 -->
+                  <rect x="60" y="38" width="90" height="34" rx="7" fill="#eff6ff" stroke="#3730a3" stroke-width="1.5"/>
+                  <text x="105" y="59" text-anchor="middle" font-size="10" fill="#1e40af">Turbo Pump</text>
+                  <rect x="60" y="108" width="90" height="34" rx="7" fill="#eff6ff" stroke="#3730a3" stroke-width="1.5"/>
+                  <text x="105" y="129" text-anchor="middle" font-size="10" fill="#1e40af">Gate Valve</text>
+                  <rect x="60" y="178" width="90" height="34" rx="7" fill="#eff6ff" stroke="#3730a3" stroke-width="1.5"/>
+                  <text x="105" y="199" text-anchor="middle" font-size="10" fill="#1e40af">MFC-2</text>
+                  <text x="105" y="230" text-anchor="middle" font-size="8.5" fill="#3730a3" font-weight="700">物理連接（拓撲）</text>
+                  <!-- 經驗節點 -->
+                  <rect x="560" y="38" width="100" height="34" rx="7" fill="var(--teal-bg)" stroke="#0d9488" stroke-width="2"/>
+                  <text x="610" y="53" text-anchor="middle" font-size="10" fill="#115e59" font-weight="700">GV-2 O-ring</text>
+                  <text x="610" y="65" text-anchor="middle" font-size="8" fill="#0d9488">歷史 5 次</text>
+                  <rect x="560" y="108" width="100" height="34" rx="7" fill="var(--teal-bg)" stroke="#0d9488"/>
+                  <text x="610" y="123" text-anchor="middle" font-size="10" fill="#115e59">TP-1 軸承</text>
+                  <text x="610" y="135" text-anchor="middle" font-size="8" fill="#0d9488">歷史 2 次</text>
+                  <rect x="560" y="178" width="100" height="34" rx="7" fill="#f8fafc" stroke="#94a3b8"/>
+                  <text x="610" y="193" text-anchor="middle" font-size="10" fill="#64748b">壓力計 PS-1</text>
+                  <text x="610" y="205" text-anchor="middle" font-size="8" fill="#94a3b8">歷史 1 次</text>
+                  <text x="610" y="230" text-anchor="middle" font-size="8.5" fill="#0d9488" font-weight="700">經驗關聯（案例累積）</text>
+                </svg>
+                <div class="gr-legend">
+                  <span><span class="ln-sample" style="border-color:#3730a3"></span><b>物理連接</b>：機台架構，靜態</span>
+                  <span><span class="ln-sample" style="border-color:#0d9488;border-top-style:dashed"></span><b>經驗關聯</b>：粗細＝共現次數×確認率</span>
+                  <span>🔴 查詢起點</span>
+                </div>
+              </div>
+
+              <div style="font-size:11px;font-weight:700;color:var(--ink2);margin-bottom:7px;">候選零件（排序：經驗優先，物理兜底）</div>
+
+              <div class="cand">
+                <span class="cand-rank" style="background:#dc2626">1</span>
+                <div class="cand-body">
+                  <b>GV-2 O-ring</b> <span class="cand-src src-both">物理 + 經驗</span><br>
+                  <span style="color:var(--ink3);font-size:10.5px">物理上直連 chamber；歷史 5 次命中（本台 3 次、同型 2 次），確認率 100%</span>
+                  <div class="weight-bar"><div class="weight-fill" style="width:92%"></div></div>
+                </div>
+                <div class="cand-fb">
+                  <button class="fb-y" onclick="grFb(this,'y','GV-2 O-ring')">👍</button>
+                  <button class="fb-y fb-n" onclick="grFb(this,'n','GV-2 O-ring')">👎</button>
+                </div>
+              </div>
+
+              <div class="cand">
+                <span class="cand-rank" style="background:#d97706">2</span>
+                <div class="cand-body">
+                  <b>TP-1 軸承</b> <span class="cand-src src-both">物理 + 經驗</span><br>
+                  <span style="color:var(--ink3);font-size:10.5px">歷史 2 次（皆同型機，本台未發生），確認率 100%</span>
+                  <div class="weight-bar"><div class="weight-fill" style="width:48%"></div></div>
+                </div>
+                <div class="cand-fb">
+                  <button class="fb-y" onclick="grFb(this,'y','TP-1 軸承')">👍</button>
+                  <button class="fb-y fb-n" onclick="grFb(this,'n','TP-1 軸承')">👎</button>
+                </div>
+              </div>
+
+              <div class="cand">
+                <span class="cand-rank" style="background:#94a3b8">3</span>
+                <div class="cand-body">
+                  <b>MFC-2</b> <span class="cand-src src-phy">僅物理</span><br>
+                  <span style="color:var(--ink3);font-size:10.5px">物理上連著，但歷史從未成為根因——<b>純骨架推理，信心低</b></span>
+                  <div class="weight-bar"><div class="weight-fill" style="width:15%;background:#94a3b8"></div></div>
+                </div>
+                <div class="cand-fb">
+                  <button class="fb-y" onclick="grFb(this,'y','MFC-2')">👍</button>
+                  <button class="fb-y fb-n" onclick="grFb(this,'n','MFC-2')">👎</button>
+                </div>
+              </div>
+
+              <div style="font-size:10.5px;color:var(--ink3);line-height:1.7;margin-top:8px;
+                padding:8px 10px;background:#f8f9fb;border-radius:7px;">
+                <b style="color:#4b5563">兩層權重怎麼算：</b>
+                本台經驗 > 同型機經驗 > 純物理連接。<br>
+                「僅物理」的候選永遠排最後——<b>連著不代表會壞</b>，這是骨架推理，不是經驗。
+              </div>
+            </div>
+
+            <!-- ── 建圖 ── -->
+            <div class="gr-pane" id="grp-b">
+              <div class="drill">
+                <b>Agent 是助產士，不是產婆。</b><br>
+                它幫你把圖生出四五成——剩下的你補。<b>你只做「審閱」，不做「創作」。</b>
+              </div>
+
+              <div class="build-step">
+                <span class="bs-num done">✓</span>
+                <div class="bs-body">
+                  <b>解析廠商文件</b>（XT-1900i 真空系統圖.pdf · 已收錄）<br>
+                  抽出 <b>18 條</b>連接關係。<span class="conf-hi">高信心 11 條</span> 文件明確寫出 → 直接畫<br>
+                  <span class="conf-lo">低信心 7 條</span> 文件模糊/LLM 推測 → 畫成虛線，待你確認
+                  <div style="font-size:10px;color:#9ca3af;margin-top:3px">⚠ 文件可能不是最新版（2023 rev）——實機可能已改</div>
+                </div>
+              </div>
+
+              <div class="build-step">
+                <span class="bs-num done">✓</span>
+                <div class="bs-body">
+                  <b>對照換件料號清單</b>，節點名稱正規化<br>
+                  「渦輪泵」/「Turbo Pump」/「TP-1」→ 統一為 <b>TP-1</b>（料號 ASM-VP-0142）<br>
+                  <span style="color:#0d9488">節點粒度 = 換件料號 —— 因為那才是可行動的單位</span>
+                </div>
+              </div>
+
+              <div class="build-step">
+                <span class="bs-num done">✓</span>
+                <div class="bs-body">
+                  <b>Recipe 硬體欄位反推</b><br>
+                  從 recipe step 的控制參數，補出 <b>4 條</b>文件沒寫的連接（如 S2 Pump Down 控制 TP-1 轉速）
+                </div>
+              </div>
+
+              <div class="build-step">
+                <span class="bs-num wait">4</span>
+                <div class="bs-body">
+                  <b>你來補完</b>（Agent 已完成約 <b>55%</b>）<br>
+                  <span style="color:#92400e">7 條待確認 + 你知道但文件沒寫的，需要你補</span>
+                </div>
+              </div>
+
+              <div style="font-size:11px;font-weight:700;color:var(--ink2);margin:12px 0 7px;">
+                待確認的低信心邊（Agent 推測，需你判斷）
+              </div>
+
+              <div class="pending-edge">
+                <span class="pe-rel">TP-1 → GV-2</span>
+                <span style="font-size:10px;color:var(--ink3)">文件說「串接」，但沒說方向</span>
+                <span class="pe-btns">
+                  <button class="pe-yes" onclick="peFix(this,'ok')">✓ 對</button>
+                  <button class="pe-no" onclick="peFix(this,'no')">✗ 錯</button>
+                </span>
+              </div>
+              <div class="pending-edge">
+                <span class="pe-rel">MFC-2 → Chamber</span>
+                <span style="font-size:10px;color:var(--ink3)">推測（同類機台通常如此）</span>
+                <span class="pe-btns">
+                  <button class="pe-yes" onclick="peFix(this,'ok')">✓ 對</button>
+                  <button class="pe-no" onclick="peFix(this,'no')">✗ 錯</button>
+                </span>
+              </div>
+              <div class="pending-edge">
+                <span class="pe-rel">PS-1 → Chamber</span>
+                <span style="font-size:10px;color:var(--ink3)">文件圖示不清</span>
+                <span class="pe-btns">
+                  <button class="pe-yes" onclick="peFix(this,'ok')">✓ 對</button>
+                  <button class="pe-no" onclick="peFix(this,'no')">✗ 錯</button>
+                </span>
+              </div>
+
+              <div class="add-btn" style="margin-top:8px" onclick="grTab('g')">
+                + 手動新增節點／連接（你知道但文件沒寫的）
+              </div>
+
+              <div class="grow">
+                <b>🏗 建圖成本 vs 價值</b><br>
+                純人工建：8 台機 × 20+ 節點 × 連接關係 = 沒人會做<br>
+                <b>Agent 先生出 55%，人只審閱與補漏</b> → 這才是「想建的人建得起來」<br>
+                <span style="color:#0f766e">物理骨架建一次，同型機可以移植（經驗邊不移植——每台的老毛病不一樣）</span>
+              </div>
+            </div>
+
+            <!-- ── 養肥 ── -->
+            <div class="gr-pane" id="grp-g">
+              <div class="drill">
+                <b>經驗邊怎麼長出來、怎麼變準。</b><br>
+                圖不是建完就結束——<b>它在你每次使用時長肥</b>。
+              </div>
+
+              <div class="build-step">
+                <span class="bs-num">1</span>
+                <div class="bs-body">
+                  <b>驗屍案例自動餵圖</b>（§43）<br>
+                  每存一個 case，「根因零件」= 圖上的節點 ID → <b>那條邊自動 +1</b><br>
+                  <span style="color:#0d9488">工程師只是照常結案，圖自己長 —— 零額外人力</span>
+                </div>
+              </div>
+
+              <div class="build-step">
+                <span class="bs-num">2</span>
+                <div class="bs-body">
+                  <b>使用中回饋</b>（查詢頁的 👍👎）<br>
+                  👍 準 → 邊權重 +1，排序上升<br>
+                  👎 不準 → 邊權重 -1，並問「<b>那實際上是什麼？</b>」→ 受控下拉選正確零件<br>
+                  <span style="color:#0d9488">→ 新的邊長出來，或既有邊變強</span>
+                </div>
+              </div>
+
+              <div class="build-step">
+                <span class="bs-num">3</span>
+                <div class="bs-body">
+                  <b>口語建圖</b>（工程師講，Agent 畫）<br>
+                  「這台的 chamber pressure 飄，八成是 GV-2 密封」<br>
+                  → Agent 產生候選邊 → 你確認 → 進經驗層<br>
+                  <span style="color:#9ca3af">這是加經驗邊，不是補物理拓撲——工程師講的是經驗</span>
+                </div>
+              </div>
+
+              <div style="font-size:11px;font-weight:700;color:var(--ink2);margin:12px 0 7px;">
+                兩層經驗邊（本台優先，同型機兜底）
+              </div>
+
+              <div class="cand">
+                <span class="cand-rank" style="background:#0d9488">本台</span>
+                <div class="cand-body">
+                  <b>SCN-A01 專屬經驗</b> · 14 條邊<br>
+                  <span style="color:var(--ink3);font-size:10.5px">這台的老毛病——只有這個課的人養得出來</span>
+                </div>
+              </div>
+              <div class="cand">
+                <span class="cand-rank" style="background:#94a3b8">同型</span>
+                <div class="cand-body">
+                  <b>LITHO-SCN 機型共用</b> · 31 條邊<br>
+                  <span style="color:var(--ink3);font-size:10.5px">同型機累積，冷啟動時的兜底（權重低於本台）</span>
+                </div>
+              </div>
+
+              <div class="grow">
+                <b>🌱 這就是「養肥自己的 AI assistant」</b><br><br>
+                物理骨架 → 可以移植（同型機共用）<br>
+                <b>經驗邊 → 不移植</b>（每台機的老毛病不一樣）<br><br>
+                <b style="color:#0f766e">久了之後，這台機的圖，只有你們這個課養得出來。</b><br>
+                <span style="color:#0d9488">Claude 拿到同樣的 MCP 也建不出這張圖——
+                它沒有你們的案例、沒有你們的 👍👎、沒有你們五年的踩坑。<b>這是 domain 護城河的具體形態。</b></span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="zone">
+          <div class="zone-hd">交叉診斷結論<span class="hint">五個指標互相驗證</span></div>
+          <div class="tseg-body">
+            <b>兩條獨立的問題線：</b><br><br>
+            🔴 <b>Chuck B 硬體</b>（Overlay TILT + Leveling hot spot 交叉驗證）<br>
+            <span style="padding-left:16px;color:#4b5563">→ 課內可處理：清潔／換 O-ring（老李 3/22 case）</span><br><br>
+            🟡 <b>共用光學系統</b>（Focus BOWL + Field repeating + Slit 右偏，兩 chuck 一致）<br>
+            <span style="padding-left:16px;color:#4b5563">→ 部分需 FSE：slit 像差超出課內範圍</span><br><br>
+            <span style="color:#0d9488">Dual chuck 這一刀，把五個指標分成兩堆——這就是排查效率的來源。</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="col-side">
+        <div class="zone">
+          <div class="zone-hd">空間 Pattern 詞彙<span class="hint">受控 taxonomy</span></div>
+          <div style="font-size:10.5px;line-height:1.9;color:var(--ink2)">
+            <b>Wafer level</b><br>
+            <span class="sp-tag sp-bowl">BOWL</span> 碗狀（中心低）<br>
+            <span class="sp-tag sp-bowl">DOME</span> 凸起（中心高）<br>
+            <span class="sp-tag sp-tilt">TILT</span> 單向傾斜<br>
+            <span class="sp-tag sp-tilt">SADDLE</span> 馬鞍<br>
+            <span class="sp-tag sp-edge">EDGE ROLL-OFF</span> 邊緣塌陷<br>
+            <span class="sp-tag sp-rand">RANDOM</span> 無規律<br><br>
+            <b>Field level</b><br>
+            <span class="sp-tag sp-tilt">SCAN-DIR TILT</span> 掃描方向傾斜<br>
+            <span class="sp-tag sp-edge">CORNER-HEAVY</span> 角落偏重<br><br>
+            <b>Slit level</b><br>
+            <span class="sp-tag sp-sym">SYMMETRIC</span> 對稱<br>
+            <span class="sp-tag sp-tilt">ASYMMETRIC</span> 單側惡化
+          </div>
+        </div>
+        <div class="zone">
+          <div class="zone-hd">Dual Chuck 診斷邏輯</div>
+          <div style="font-size:11px;line-height:1.8;color:var(--ink2)">
+            <b style="color:#0f1f3d">一致</b> → 共用系統<br>
+            <span style="padding-left:12px;color:#9ca3af">透鏡／光源／環境／servo</span><br><br>
+            <b style="color:#0f1f3d">分歧</b> → 該 chuck 硬體<br>
+            <span style="padding-left:12px;color:#9ca3af">吸盤／sensor／表面／校正</span><br><br>
+            <span style="color:#0d9488;font-size:10px">兩個 chuck 是天然的對照組——
+            這一刀切下去，排查範圍直接減半。</span>
+          </div>
+        </div>
+        <div class="zone">
+          <div class="zone-hd">問 Copilot</div>
+          <div class="chips" style="flex-direction:column">
+            <span class="chip" onclick="ask('找相似歷史案例')">這 pattern 以前出現過嗎？</span>
+            <span class="chip" onclick="ask('這個零件換過幾次')">Chuck B 換過什麼？</span>
+            <span class="chip" onclick="ask('log 珍寶分析')">看 log 有無對應異常</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pane" id="pane-settings">
+    <div class="settings">
+      <div class="set-note">IT 全域設定（全域 DOs、MCP 白名單）仍在 IT 後台。此處管「課」的資產與工具引用——白名單放行的工具，由課別決定要不要用。</div>
+      <div class="zone">
+        <div class="zone-hd">課別 DOs<span class="hint">進 Agent system prompt</span></div>
+        <textarea rows="5">- 引用 SOP 編號回答
+- 不確定時優先建議找 PE
+- 數值要附單位與容忍度
+- 不要建議跳過 SOP step
+- 曝光參數變更一律提醒需 PE 簽核</textarea>
+      </div>
+      <div class="zone">
+        <div class="zone-hd">MCP 工具引用<span class="hint">勾選這個課別允許 iDo 動用的工具 · 用槍時機由課決定</span></div>
+        <div class="mcp-row">
+          <input type="checkbox" checked>
+          <div class="mcp-main"><span class="mcp-name">case-query</span> · 歷史案例庫查詢
+            <div class="mcp-desc">相似案例、換件紀錄、根因閉環——domain 差異化核心，建議常開。</div></div>
+        </div>
+        <div class="mcp-row">
+          <input type="checkbox" checked>
+          <div class="mcp-main"><span class="mcp-name">fdc-query</span> · FDC / ML kernel 判讀
+            <div class="mcp-desc">波形 pattern、baseline 比對、斜率外推。</div></div>
+        </div>
+        <div class="mcp-row">
+          <input type="checkbox" checked>
+          <div class="mcp-main"><span class="mcp-name">stats-query</span> · 統計比對
+            <div class="mcp-desc">MTBI、同型機比對、PM 效果、時間規律。</div></div>
+        </div>
+        <div class="mcp-row">
+          <input type="checkbox" checked>
+          <div class="mcp-main"><span class="mcp-name">log-digest / log-read</span> · log 蒸餾與查閱
+            <div class="mcp-desc">Drain3 pattern 蒸餾 + tail/grep（300 行硬上限）。原始 log 不進 RAG。</div></div>
+        </div>
+        <div class="mcp-row">
+          <input type="checkbox">
+          <div class="mcp-main"><span class="mcp-name">graph-query</span> · 維修關聯圖推理
+            <div class="mcp-desc">三層診斷第 3 層，前兩層有答案時通常不啟動。本課預設關閉，需要再開。</div></div>
+          <span class="mcp-off-tag">預設關</span>
+        </div>
+        <div class="mcp-row locked">
+          <input type="checkbox" checked disabled>
+          <div class="mcp-main"><span class="mcp-name">global-sop</span> · 全域 SOP 對照
+            <div class="mcp-desc">IT 全域白名單強制開啟，課別不可關閉。</div></div>
+          <span class="mcp-lock">🔒 IT 鎖定</span>
+        </div>
+        <div class="src-hint">
+          只列出 IT 全域白名單已放行的工具；這裡是課別層的第二道閘——<b>白名單決定「能不能用」，這裡決定「這個課要不要用」</b>。
+          未勾選的工具，iDo 在本課一律不動用。
+        </div>
+      </div>
+      <div class="zone">
+        <div class="zone-hd">專家標籤<span class="hint">待答問題依標籤通知 · Sponsor 維護</span></div>
+        <div class="exp-row">老李 <span class="exp-tag">MFC·氣體</span><span class="exp-tag">真空</span><button class="btn-off">移除</button></div>
+        <div class="exp-row">陳工 <span class="exp-tag">Focus·Stage</span><button class="btn-off">移除</button></div>
+        <div class="exp-row">林EE <span class="exp-tag">Track·塗佈顯影</span><button class="btn-off">移除</button></div>
+        <div class="add-btn" style="margin-top:6px">+ 新增專家標籤</div>
+      </div>
+      <div class="zone">
+        <div class="zone-hd">Domain 來源管理<span class="hint">登錄 KM space 作為 domain 來源 · 課內工程師可接 · Sponsor 可移除</span></div>
+        <div class="file">🔗 <div><div class="file-name">Litho2 設備 KM Space</div><div class="src-url">https://km.fab.corp/space/litho2-equipment</div><div class="file-meta">陳工 登錄 · 07/02</div></div><span class="file-right"><span class="connected">● 已接</span> <button class="btn-off">移除</button></span></div>
+        <div class="file">🔗 <div><div class="file-name">ASML XT-1900i 原廠文件 Space</div><div class="src-url">https://km.fab.corp/space/asml-xt1900-vendor</div><div class="file-meta">林EE 登錄 · 06/28</div></div><span class="file-right"><span class="connected">● 已接</span> <button class="btn-off">移除</button></span></div>
+        <div class="src-add">
+          <input id="srcUrlInp" type="text" placeholder="貼上 KM space URL（例：https://km.fab.corp/space/…）" autocomplete="off">
+          <button onclick="addDomainSource()">＋ 新增來源</button>
+        </div>
+        <div class="src-hint">
+          登錄的是 KM space 的<b>連結</b>，不是把檔案搬進來——iDo 直接接該 space 作為 domain 來源，
+          內容更新由 KM 端維護，這裡只管「接哪些來源」。
+        </div>
+      </div>
+      <button class="btn-sm" style="width:100px" onclick="backFromSettings()">← 返回</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="fdc-overlay" id="fdcOverlay" onclick="if(event.target===this)closeFDC()">
+  <div class="fdc-card">
+    <div class="fdc-hd">
+      <span style="font-size:18px">🔬</span>
+      <div>
+        <div class="fdc-hd-t">FOCUS-DRIFT-011 · AI 判讀</div>
+        <div class="fdc-hd-s">SCN-A01 · focus_error · 近 90 天 · ML kernel 分析</div>
+      </div>
+      <button class="fdc-close" onclick="closeFDC()">✕</button>
+    </div>
+
+    <div class="fdc-body">
+
+      <div class="tc-tabs">
+        <div class="tc-tab on" id="tct-u" onclick="tcTab('u')">📊 u chart（by wafer · 統計點）</div>
+        <div class="tc-tab" id="tct-t" onclick="tcTab('t')">📉 t chart（毫秒級 · 製程波形）</div>
+      </div>
+
+      <div class="tc-pane on" id="tcp-u">
+
+      <!-- 圖表：轉折點 + 分段 -->
+      <div class="chart-wrap">
+        <div class="chart-hd">
+          <span>focus_error (nm) · 近 90 天</span>
+          <span class="ml-badge">🤖 ML 切割 4 個轉折點</span>
+        </div>
+        <svg viewBox="0 0 860 200" style="width:100%;height:200px">
+          <!-- 分段背景 -->
+          <rect x="0" y="0" width="200" height="170" fill="#16a34a" opacity=".06"/>
+          <rect x="200" y="0" width="180" height="170" fill="#dc2626" opacity=".07"/>
+          <rect x="380" y="0" width="220" height="170" fill="#2563eb" opacity=".06"/>
+          <rect x="600" y="0" width="260" height="170" fill="#d97706" opacity=".08"/>
+          <!-- UCL -->
+          <line x1="0" y1="30" x2="860" y2="30" stroke="#dc2626" stroke-dasharray="5 4" stroke-width="1.5"/>
+          <text x="4" y="25" font-size="9" fill="#dc2626">UCL +10nm</text>
+          <!-- baseline -->
+          <line x1="0" y1="130" x2="200" y2="130" stroke="#16a34a" stroke-dasharray="3 3" stroke-width="1.5"/>
+          <text x="4" y="143" font-size="9" fill="#16a34a">baseline +2.1nm</text>
+          <!-- 資料線 -->
+          <polyline points="0,132 40,128 80,133 120,130 160,131 200,129
+            210,110 250,105 290,100 330,96 380,92
+            390,94 430,90 470,93 510,91 550,92 600,90
+            610,85 650,76 690,68 730,58 770,48 810,40 860,34"
+            fill="none" stroke="#0f1f3d" stroke-width="2"/>
+          <!-- 轉折點 -->
+          <circle cx="200" cy="129" r="5" fill="#dc2626" stroke="#fff" stroke-width="2"/>
+          <circle cx="380" cy="92" r="5" fill="#dc2626" stroke="#fff" stroke-width="2"/>
+          <circle cx="600" cy="90" r="5" fill="#dc2626" stroke="#fff" stroke-width="2"/>
+          <circle cx="860" cy="34" r="5" fill="#dc2626" stroke="#fff" stroke-width="2"/>
+          <!-- 事件旗標 -->
+          <line x1="200" y1="170" x2="200" y2="185" stroke="#92400e" stroke-width="1.5"/>
+          <text x="188" y="196" font-size="8" fill="#92400e">🔧 換件</text>
+          <line x1="385" y1="170" x2="385" y2="185" stroke="#92400e" stroke-width="1.5"/>
+          <text x="370" y="196" font-size="8" fill="#92400e">📐 校正</text>
+          <line x1="600" y1="170" x2="600" y2="185" stroke="#92400e" stroke-width="1.5"/>
+          <text x="588" y="196" font-size="8" fill="#92400e">⚙ 改 EC</text>
+          <line x1="615" y1="170" x2="615" y2="185" stroke="#92400e" stroke-width="1.5"/>
+          <text x="622" y="196" font-size="8" fill="#92400e">🔴 PM</text>
+        </svg>
+        <div class="seg-legend">
+          <span><i style="background:#16a34a;opacity:.4"></i>穩定</span>
+          <span><i style="background:#dc2626;opacity:.4"></i>Mean Shift</span>
+          <span><i style="background:#2563eb;opacity:.4"></i>Multi-peak</span>
+          <span><i style="background:#d97706;opacity:.5"></i>Trending</span>
+          <span>🔴 轉折點（ML 偵測）· 🔧📐⚙ 事件旗標（時間並列，不強行歸因）</span>
+        </div>
+      </div>
+
+      <!-- Baseline 判定 -->
+      <div class="baseline">
+        <div class="bl-hd">⚠ Baseline Shift 偵測：<b>是</b></div>
+        <div class="bl-body">
+          Baseline（前 30 天）：<b>+2.1 nm</b>（σ 0.4）<br>
+          目前水位（近 7 天）：<b>+7.8 nm</b>（σ 1.2）<br>
+          → 偏移 <b>+5.7 nm</b>（14.3σ），變異度也放大 3 倍。<b>不是雜訊，是真實偏移。</b>
+        </div>
+      </div>
+
+      <!-- 分段結果 -->
+      <div style="font-size:11px;font-weight:700;color:var(--ink2);margin-bottom:8px;">分段 Pattern 判定（ML）</div>
+
+      <div class="tax-note">
+        <b>Pattern 用兩個正交維度標記</b>——時序行為（怎麼變）× 分布形狀（長什麼樣）。<br>
+        這樣 <code>SPIKE</code>（時序：突起後回復）與 <code>SINGLE_PEAK</code>（分布：單峰）就不會混淆——它們是不同維度的事。
+      </div>
+
+      <div class="seg">
+        <div class="seg-hd">① Day 1–30
+          <span class="dual-tag"><span class="pat pat-t">時序 STABLE</span><span class="pat pat-d">分布 SINGLE_PEAK</span></span>
+          <span class="seg-stat">μ=2.1 σ=0.4</span></div>
+        <div class="seg-stat">水位穩定、單峰常態。此段作為 baseline。</div>
+      </div>
+
+      <div class="seg">
+        <div class="seg-hd">② Day 30–48
+          <span class="dual-tag"><span class="pat pat-t">時序 MEAN_SHIFT</span><span class="pat pat-d">分布 SINGLE_PEAK</span></span>
+          <span class="seg-stat">μ: 2.1 → 4.6（+2.5nm）</span></div>
+        <div class="seg-stat">階梯式跳升後重新穩定，分布仍為單峰。</div>
+        <div class="seg-evt">📍 轉折點附近事件（±3 天內）：<b>🔧 Day 30 更換鏡組溫控模組</b>（老李）<br>
+          <span style="color:#9ca3af">時間並列，不代表因果——由你判斷</span></div>
+      </div>
+
+      <div class="seg">
+        <div class="seg-hd">③ Day 48–70
+          <span class="dual-tag"><span class="pat pat-t">時序 STABLE</span><span class="pat pat-d">分布 MULTI_PEAK</span></span>
+          <span class="seg-stat">雙峰：4.2 / 5.8</span></div>
+        <div class="seg-stat">水位沒有趨勢（時序穩定），但分布呈雙峰——疑似兩種運作條件交替（如日夜班）。<br>
+          <span style="color:#9ca3af">這正是雙維度的價值：時序看起來平穩，問題藏在分布裡。</span></div>
+        <div class="seg-evt">📍 附近事件：<b>📐 Day 48 執行 focus 校正</b>（陳工）</div>
+      </div>
+
+      <div class="seg">
+        <div class="seg-hd">④ Day 70–90
+          <span class="dual-tag"><span class="pat pat-t">時序 TRENDING</span><span class="pat pat-d">分布 SKEWED</span></span>
+          <span class="seg-stat">斜率 +1.1 nm/日 · R²=0.94 · 右偏</span></div>
+        <div class="seg-stat">持續單向上升，線性度高，分布右偏。依此斜率推估 <b>1.5 天後越 UCL</b>。</div>
+        <div class="seg-evt">📍 附近事件：<b>⚙ Day 70 修改 EC 參數</b>（PE 陳）· <b>🔴 Day 72 PM</b><br>
+          <span style="color:#9ca3af">兩個事件相近，難以區分——建議查 EC 變更內容</span></div>
+      </div>
+
+      <!-- LLM 總結 -->
+      <div class="summary">
+        <div class="sum-hd">💬 自然語言總結 <span style="font-weight:400;font-size:9px;color:#0f766e">（LLM 只讀 ML 輸出做敘事，不自己判定 pattern）</span></div>
+        <div class="sum-body">
+          這台機的 focus error 在 90 天內經歷四個階段。前 30 天穩定在 2.1nm，<b>Day 30 更換鏡組溫控模組後出現階梯式跳升</b>（+2.5nm），這不是漸進老化，是換件當下的水位重設。<br><br>
+          中段出現雙峰分布，可能是兩種運作條件交替；<b>最值得注意的是最後 20 天的持續上升趨勢</b>（+1.1nm/日，線性度高），Day 70 前後有 EC 修改與 PM 兩個事件，時間相近難以區分。<br><br>
+          <b>結論：Baseline 已明顯偏移（+5.7nm），且仍在惡化中。</b>建議優先查 Day 70 的 EC 變更內容——趨勢起點與它吻合。
+        </div>
+      </div>
+
+          </div><!-- /tcp-u -->
+
+      <!-- ══════ t chart 分頁 ══════ -->
+      <div class="tc-pane" id="tcp-t">
+
+        <div class="drill">
+          <b>為什麼要看 t chart？</b> u chart 只告訴你「這片 wafer 的統計值 OOC」，
+          t chart 告訴你「<b>異常發生在製程的哪一秒</b>」——而那一秒機台在做什麼，recipe 說了算。<br>
+          追根鏈路：<b>統計異常 → 時序位置 → recipe 語意 → 物理零件 → 換件/SOP</b>
+        </div>
+
+        <div class="chart-wrap">
+          <div class="chart-hd">
+            <span>Wafer #A0714-023 · chamber pressure · 單片 42 秒</span>
+            <span class="ml-badge">🤖 recipe 對齊（rule base）</span>
+            <span style="font-size:10px;color:#dc2626">⚠ 此片 u chart OOC（+11.2nm）</span>
+          </div>
+
+          <!-- recipe step 條 -->
+          <div class="rcp-bar">
+            <div class="rcp-step" style="flex:8;background:#64748b" onclick="tcSeg(1)">S1 Load</div>
+            <div class="rcp-step bad" style="flex:14;background:#dc2626" onclick="tcSeg(2)">S2 Pump Down ⚠</div>
+            <div class="rcp-step" style="flex:6;background:#0d9488" onclick="tcSeg(3)">S3 Stabilize</div>
+            <div class="rcp-step bad" style="flex:10;background:#d97706" onclick="tcSeg(4)">S4 Expose ⚠</div>
+            <div class="rcp-step" style="flex:4;background:#64748b" onclick="tcSeg(5)">S5 Vent</div>
+          </div>
+          <div class="rcp-axis">
+            <span style="flex:8">0s</span><span style="flex:14">8s</span>
+            <span style="flex:6">22s</span><span style="flex:10">28s</span><span style="flex:4">38s</span>
+          </div>
+
+          <!-- t chart 波形 -->
+          <svg viewBox="0 0 860 180" style="width:100%;height:180px">
+            <rect x="0" y="0" width="160" height="150" fill="#64748b" opacity=".05"/>
+            <rect x="160" y="0" width="280" height="150" fill="#dc2626" opacity=".08"/>
+            <rect x="440" y="0" width="120" height="150" fill="#0d9488" opacity=".05"/>
+            <rect x="560" y="0" width="220" height="150" fill="#d97706" opacity=".08"/>
+            <rect x="780" y="0" width="80" height="150" fill="#64748b" opacity=".05"/>
+            <line x1="0" y1="40" x2="860" y2="40" stroke="#9ca3af" stroke-dasharray="4 3"/>
+            <text x="4" y="36" font-size="8" fill="#9ca3af">target 3.0e-6</text>
+            <!-- 正常參考（虛線）-->
+            <polyline points="0,120 160,118 200,90 280,55 360,44 440,42 500,42 560,42
+              600,44 700,43 780,42 800,90 860,118"
+              fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3"/>
+            <!-- 實際（實線，異常）-->
+            <polyline points="0,120 160,119 200,105 280,88 360,72 440,62 500,58 560,56
+              600,58 640,50 660,88 680,52 720,54 780,53 800,95 860,120"
+              fill="none" stroke="#0f1f3d" stroke-width="2"/>
+            <!-- 異常標記 -->
+            <circle cx="440" cy="62" r="4" fill="#dc2626"/>
+            <text x="360" y="80" font-size="9" fill="#dc2626" font-weight="700">抽不到位</text>
+            <circle cx="660" cy="88" r="4" fill="#d97706"/>
+            <text x="620" y="108" font-size="9" fill="#d97706" font-weight="700">單點 data loss</text>
+            <text x="700" y="168" font-size="8" fill="#94a3b8">虛線＝同 recipe 正常片參考</text>
+          </svg>
+        </div>
+
+        <!-- 段落分析 -->
+        <div style="font-size:11px;font-weight:700;color:var(--ink2);margin-bottom:8px;">
+          逐段比對 recipe（點上方色塊也可跳段）
+        </div>
+
+        <div class="tseg known" id="tseg2">
+          <div class="tseg-hd">S2 Pump Down（8–22s）
+            <span class="tseg-tag tg-bad">偏移</span>
+            <span class="tseg-tag tg-hit">✓ 命中歷史 case</span>
+          </div>
+          <div class="tseg-body">
+            recipe 要求 14 秒內抽到 <b>3.0e-6 torr</b>，實際 22 秒仍停在 <b>5.8e-6</b>——<b>抽不到位</b>，非 data loss。
+            <div class="tseg-cmp">
+              <div class="cmp-box"><div class="cmp-lbl">RECIPE 目標</div>
+                <div class="cmp-val">3.0e-6 torr @ 14s</div></div>
+              <div class="cmp-box" style="border-color:#fca5a5">
+                <div class="cmp-lbl" style="color:#dc2626">實際</div>
+                <div class="cmp-val" style="color:#dc2626">5.8e-6 torr @ 14s</div></div>
+            </div>
+            <div class="chain">
+              <span class="chain-node">S2 Pump Down</span>
+              <span class="chain-arrow">→</span>
+              <span class="chain-node part">Turbo Pump TP-1</span>
+              <span class="chain-arrow">→</span>
+              <span class="chain-node part">Gate Valve GV-2</span>
+              <span class="chain-arrow">→</span>
+              <span class="chain-node sop" onclick="ask('找相似歷史案例')">SOP V-03 真空排查</span>
+            </div>
+            <div class="flywheel">
+              🔄 <b>知識飛輪命中</b>：陳工 5/12 標註過同樣現象——「S2 抽不到位 = GV-2 密封劣化」，
+              換件後恢復。<b>這條知識不是我推理出來的，是你們寫進 KM 的。</b><br>
+              <span style="color:#0f766e">→ 相似案例：C-0512-009（換 GV-2 O-ring，2.5hr 解決）</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tseg bad" id="tseg4">
+          <div class="tseg-hd">S4 Expose（28–38s）
+            <span class="tseg-tag tg-loss">Data Loss</span>
+            <span class="tseg-tag" style="background:#f3f4f6;color:#6b7280">未知現象</span>
+          </div>
+          <div class="tseg-body">
+            33.2s 處單點 data loss（值跳到 8.8e-6 後立即回復），非持續偏移。
+            recipe 此段為曝光，理論上壓力應恆定。
+            <div class="tseg-cmp">
+              <div class="cmp-box"><div class="cmp-lbl">RECIPE 此段動作</div>
+                <div class="cmp-val" style="font-size:11px">Expose · 壓力恆定 3.0e-6</div></div>
+              <div class="cmp-box" style="border-color:#fde68a">
+                <div class="cmp-lbl" style="color:#92400e">異常型態</div>
+                <div class="cmp-val" style="color:#92400e;font-size:11px">單點 loss（1 sample）</div></div>
+            </div>
+            <div style="margin-top:8px;padding:8px 10px;background:#fff;border:1px dashed var(--line);
+              border-radius:6px;font-size:11px;color:var(--ink3);line-height:1.7">
+              ❓ <b style="color:#4b5563">KM 裡沒有這個現象的紀錄。</b>
+              我不知道這是感測器問題、通訊丟包，還是真實的壓力擾動——<b>我不猜</b>。<br>
+              <span style="color:#0d9488">→ 你知道嗎？標註它，這就是新知識。</span>
+            </div>
+
+            <!-- 標註表單（受控） -->
+            <div class="annot" id="annot4">
+              <div class="annot-hd">✍️ 標註這一段（你的判斷 → 存進 KM → 下次 Agent 就會了）</div>
+              <div class="annot-row">
+                <span class="annot-lbl">這段實際上是什麼？</span>
+                <select class="annot-sel" id="anWhat">
+                  <option>感測器 data loss（訊號問題，非製程異常）</option>
+                  <option>通訊丟包（DAQ 端問題）</option>
+                  <option>真實壓力擾動（製程問題）</option>
+                  <option>recipe step 邊界對錯了（這裡不是 S4）</option>
+                  <option>其他（下方補充）</option>
+                </select>
+              </div>
+              <div class="annot-row">
+                <span class="annot-lbl">懷疑的零件（可空白）</span>
+                <select class="annot-sel" id="anPart">
+                  <option value="">— 不確定 / 不適用 —</option>
+                  <option>Pressure Sensor PS-1</option>
+                  <option>Turbo Pump TP-1</option>
+                  <option>Gate Valve GV-2</option>
+                  <option>MFC-2 流量控制</option>
+                  <option>DAQ 通訊模組</option>
+                </select>
+              </div>
+              <div class="annot-row">
+                <span class="annot-lbl">補充說明（會進 KM，其他人看得到）</span>
+                <textarea class="annot-txt" id="anNote" rows="2"
+                  placeholder="例：這台的 PS-1 在曝光震動時偶爾丟一個點，不影響製程，可忽略"></textarea>
+              </div>
+              <div class="annot-btns">
+                <button class="annot-ok" onclick="annotSave()">✓ 確認並存入 KM</button>
+                <button class="annot-no" onclick="annotSkip()">先跳過</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tseg">
+          <div class="tseg-hd">S1 / S3 / S5 <span class="tseg-tag tg-ok">正常</span></div>
+          <div class="tseg-body" style="color:var(--ink3)">與 recipe 目標一致，無偏移。</div>
+        </div>
+
+        <div class="summary">
+          <div class="sum-hd">💬 這片為什麼 OOC？<span style="font-weight:400;font-size:9px;color:#0f766e">（LLM 讀 ML + recipe 對照結果做敘事）</span></div>
+          <div class="sum-body">
+            u chart 只說「focus +11.2nm 超規」。t chart 說得更清楚：<br><br>
+            <b>真正的問題在 S2 Pump Down——沒抽到位</b>（22 秒仍在 5.8e-6，目標 3.0e-6）。
+            腔體真空度不足，曝光時折射率偏差 → focus 讀值飄。<br><br>
+            這不是 focus 系統的問題，<b>是真空系統的問題</b>。
+            換 focus 相關零件不會解決——這正是 u chart 看不出來的事。<br><br>
+            <span style="color:#0f766e">S4 那個單點 loss 我不知道是什麼，等你標註。</span>
+          </div>
+        </div>
+
+      </div><!-- /tcp-t -->
+
+    </div>
+
+    <!-- 回饋 -->
+    <div class="fb-bar" id="fbBar">
+      <span style="font-size:11px;color:var(--ink3)">這個判讀準嗎？你的回饋會訓練 ML kernel</span>
+      <button class="fb-btn" onclick="fdcGood()">👍 準確</button>
+      <button class="fb-btn bad" onclick="fdcBad()">👎 有問題</button>
+      <button class="fb-btn" style="margin-left:auto" onclick="pinFDC()">📌 打包成卡片</button>
+    </div>
+
+    <div class="fb-panel" id="fbPanel">
+      <div class="fb-q">哪裡不對？（選了之後用下拉指定正確答案——受控詞彙，不自由填寫）</div>
+      <div class="fb-opt" onclick="fxOpen('turn')">🔴 <b>轉折點切錯</b> — 多切了／少切了／位置偏了</div>
+      <div class="fb-opt" onclick="fxOpen('pattern')">🏷️ <b>Pattern 判錯</b> — 時序或分布標籤不對</div>
+      <div class="fb-opt" onclick="fxOpen('baseline')">📏 <b>Baseline 判斷錯</b> — shift 判定或區間選擇有誤</div>
+      <div class="fb-opt" onclick="fxOpen('summary')">💬 <b>總結不對</b> — ML 對但敘事誤導</div>
+    </div>
+
+    <!-- 受控回饋表單 -->
+    <div class="fx-form" id="fxForm" style="display:none">
+      <div id="fxBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CASE ID 打包彈窗 -->
+<div class="case-modal" id="caseModal">
+  <div class="case-box">
+    <h4>📌 打包到 Case Center</h4>
+    <div class="sub">這則回答會寫成卡片，附到指定的 alarm case，全課可見。</div>
+    <input id="caseInp" type="text" placeholder="請輸入 CASE ID（例：FOCUS-DRIFT-011）" autocomplete="off">
+    <div class="prefill" id="casePrefill"></div>
+    <div class="row">
+      <button class="cancel" onclick="caseCancel()">取消</button>
+      <button class="ok" onclick="caseConfirm()">打包</button>
+    </div>
+  </div>
+</div>
+
+<button class="fab" id="fab" onclick="openCopilot()">iDo</button>
+
+<div class="rail" id="rail">
+  <div class="rail-hd">
+    <div class="rail-logo">iDo</div>
+    <div>
+      <div class="rail-title">iDo Copilot</div>
+      <div class="rail-ctx" id="ctx">context：黃光二課 · 課視角</div>
+    </div>
+    <button class="rail-close" onclick="closeCopilot()">✕</button>
+  </div>
+  <div class="ask-menu" id="askMenu">
+    <div class="am-hd">💡 可以這樣問我 <span style="font-weight:400;color:#9ca3af">（點一下就問）</span></div>
+    <div class="am-group">
+      <div class="am-label">📈 病史分析 · 問完可打包</div>
+      <span class="am-chip" onclick="ask('慢性問題偵測')">有沒有宿疾？</span>
+      <span class="am-chip" onclick="ask('狀況對比')">這個月比上個月好還壞？</span>
+      <span class="am-chip" onclick="ask('PM 效果驗證')">PM 做完有真的變好嗎？</span>
+      <span class="am-chip" onclick="ask('根因閉環')">老毛病解了沒？</span>
+      <span class="am-chip" onclick="ask('這台跟同型機比起來如何')">跟同型機比，我這台特別爛嗎？</span>
+      <span class="am-chip" onclick="ask('這台的 alarm 有沒有時間規律')">alarm 有時間規律嗎？</span>
+      <span class="am-chip" onclick="ask('幫我生成這台的事件說明')">幫我生成事件說明（晨會用）</span>
+    </div>
+    <div class="am-group">
+      <div class="am-label">📉 FDC 圖形分析 · ML kernel</div>
+      <span class="am-chip" onclick="ask('現在穩了嗎回到 baseline 了嗎')">現在穩了嗎？回到 baseline 了嗎？</span>
+      <span class="am-chip" onclick="ask('過去兩週有幾次 spike')">過去兩週有幾次 spike？</span>
+      <span class="am-chip" onclick="ask('這張圖到底在幹嘛')">這張圖到底在幹嘛？</span>
+      <span class="am-chip" onclick="ask('7 天內超規幾次')">7 天內超規幾次？</span>
+      <span class="am-chip" onclick="ask('別台 spec 比較鬆嗎')">別台 spec 比較鬆嗎？</span>
+      <span class="am-chip" onclick="openFDC('t');closeCopilot()" style="border-color:#0d9488;color:#0d9488">📉 開 t chart：這片為什麼 OOC？</span>
+    </div>
+    <div class="am-group">
+      <div class="am-label">🔬 深度診斷 · 即時排查</div>
+      <span class="am-chip" onclick="ask('這次 alarm 的根因推測')">該從哪查起？</span>
+      <span class="am-chip" onclick="ask('找相似歷史案例')">以前有類似的嗎？</span>
+      <span class="am-chip" onclick="ask('log 珍寶分析')">log 裡有什麼異常？</span>
+      <span class="am-chip" onclick="ask('這兩個 alarm 有關聯嗎')">這兩個 alarm 有關聯嗎？</span>
+      <span class="am-chip" onclick="ask('這個零件換過幾次')">這零件換過幾次？</span>
+      <span class="am-chip" onclick="ask('現在該不該停機')">現在該不該停機？</span>
+      <span class="am-chip" onclick="ask('關聯圖推理')">可能是哪個零件？</span>
+    </div>
+  </div>
+  <div class="am-toggle" id="amToggle" style="display:none" onclick="showAskMenu()">💡 顯示常用問法</div>
+  <div class="msgs" id="msgs">
+    <div class="msg-b">👋 我是 iDo。上面是常用問法，點一下就問。也可以直接打字。</div>
+  </div>
+  <div class="rail-in">
+    <input id="inp" placeholder="問這台機台的任何問題⋯" onkeydown="if(event.key==='Enter')send()">
+    <button onclick="send()">送出</button>
+  </div>
+</div>
+
+<script>
+var inSettings = false;
+
+
+
+
+
+/* ══ 關聯圖 ══ */
+function grTab(t){
+  var ks = ['q','b','g'];
+  for (var i = 0; i < ks.length; i++) {
+    var tab = document.getElementById('grt-' + ks[i]);
+    var pane = document.getElementById('grp-' + ks[i]);
+    if (tab) { if (ks[i] === t) tab.classList.add('on'); else tab.classList.remove('on'); }
+    if (pane) { if (ks[i] === t) pane.classList.add('on'); else pane.classList.remove('on'); }
+  }
+}
+
+function grFb(btn, kind, part){
+  var row = btn.closest('.cand');
+  var fb = row.querySelector('.cand-fb');
+  if (kind === 'y') {
+    fb.innerHTML = '<span style="font-size:10px;color:#16a34a;font-weight:700">✓ 權重 +1</span>';
+    var bar = row.querySelector('.weight-fill');
+    if (bar) {
+      var w = parseInt(bar.style.width) || 50;
+      bar.style.width = Math.min(100, w + 6) + '%';
+    }
+    row.style.animation = 'flash 1s ease';
+  } else {
+    fb.innerHTML = '';
+    var body = row.querySelector('.cand-body');
+    body.innerHTML += '<div style="margin-top:7px;padding:8px 10px;background:#fffbeb;' +
+      'border:1px solid #fde68a;border-radius:6px">' +
+      '<div style="font-size:10px;font-weight:700;color:#92400e;margin-bottom:5px">' +
+      '那實際上是什麼？（受控下拉——新的邊會從這裡長出來）</div>' +
+      '<select class="annot-sel" id="grFix" style="font-size:11px">' +
+      '<option>Turbo Pump TP-1</option>' +
+      '<option>Gate Valve GV-2</option>' +
+      '<option>GV-2 O-ring</option>' +
+      '<option>MFC-2 流量控制</option>' +
+      '<option>壓力計 PS-1</option>' +
+      '<option>Chamber 內壁沉積</option>' +
+      '<option>其他（新節點，需先建）</option>' +
+      '</select>' +
+      '<button class="annot-ok" style="margin-top:6px;font-size:11px" onclick="grFixSave(this)">' +
+      '✓ 修正並更新圖</button></div>';
+    var bar2 = row.querySelector('.weight-fill');
+    if (bar2) {
+      var w2 = parseInt(bar2.style.width) || 50;
+      bar2.style.width = Math.max(5, w2 - 12) + '%';
+      bar2.style.background = '#94a3b8';
+    }
+  }
+}
+
+function grFixSave(btn){
+  var sel = document.getElementById('grFix');
+  var correct = sel ? sel.value : '';
+  var box = btn.parentElement;
+  box.innerHTML = '<div style="font-size:11px;color:#115e59;line-height:1.7">' +
+    '<b>✓ 圖已更新</b><br>' +
+    '· 錯誤候選：權重 -1，排序下降<br>' +
+    '· 正確答案 <b>' + correct + '</b>：經驗邊 +1（或新建）<br>' +
+    '<span style="color:#9ca3af;font-size:10px">下次同樣症狀，' + correct + ' 會排更前面。' +
+    '<b>你剛剛餵了它一口。</b></span></div>';
+  box.style.background = 'var(--teal-bg)';
+  box.style.borderColor = '#99f6e4';
+}
+
+function peFix(btn, ok){
+  var row = btn.closest('.pending-edge');
+  var btns = row.querySelector('.pe-btns');
+  if (ok === 'ok') {
+    btns.innerHTML = '<span style="font-size:10px;color:#16a34a;font-weight:700">✓ 已確認 · 實線</span>';
+    row.style.borderStyle = 'solid';
+    row.style.borderColor = '#86efac';
+    row.style.background = '#f0fdf4';
+  } else {
+    btns.innerHTML = '<span style="font-size:10px;color:#dc2626;font-weight:700">✗ 已刪除</span>';
+    row.style.opacity = '.45';
+    row.style.textDecoration = 'line-through';
+  }
+}
+
+/* ══ 深度分析：五個 scanner 指標切換 ══ */
+function ddShow(k){
+  var keys=['ov','fo','lv','fd','sl','gr'];
+  for(var i=0;i<keys.length;i++){
+    var b=document.getElementById('ddb-'+keys[i]);
+    var v=document.getElementById('ddv-'+keys[i]);
+    if(b){ if(keys[i]===k) b.classList.add('on'); else b.classList.remove('on'); }
+    if(v){ if(keys[i]===k) v.classList.add('on'); else v.classList.remove('on'); }
+  }
+}
+
+/* ══ t chart：分頁、標註、知識飛輪 ══ */
+function tcTab(t){
+  document.getElementById('tct-u').classList.toggle('on', t === 'u');
+  document.getElementById('tct-t').classList.toggle('on', t === 't');
+  document.getElementById('tcp-u').classList.toggle('on', t === 'u');
+  document.getElementById('tcp-t').classList.toggle('on', t === 't');
+}
+
+function tcSeg(n){
+  var el = document.getElementById('tseg' + n);
+  if (el) {
+    el.scrollIntoView({behavior:'smooth', block:'center'});
+    el.style.animation = 'flash 1.2s ease';
+  }
+}
+
+function annotSave(){
+  var what = document.getElementById('anWhat').value;
+  var part = document.getElementById('anPart').value;
+  var note = document.getElementById('anNote').value;
+  var box = document.getElementById('annot4');
+
+  var partTxt = part ? ('<br>懷疑零件：<b>' + part + '</b>') : '';
+  var noteTxt = note ? ('<br>補充：' + note) : '';
+
+  box.innerHTML =
+    '<div class="flywheel" style="margin-top:0">' +
+    '<b>🔄 知識飛輪已啟動</b><br><br>' +
+    '你的標註：<b>' + what + '</b>' + partTxt + noteTxt + '<br><br>' +
+    '<b>接下來會發生什麼：</b><br>' +
+    '① 產生 case（by wafer + recipe step）→ 寫進 Case Center<br>' +
+    '② 標註內容進 KM（doc:litho2 space）→ 全課可查<br>' +
+    '③ 餵給 ML training queue → 下次同 recipe 同型態，模型會認得<br>' +
+    '④ <b>下次任何人看到 S4 這個現象，Agent 會直接說：</b><br>' +
+    '<span style="color:#0f766e;padding-left:14px">「這是 ' + what.split('（')[0] + '，' +
+    (part ? part + ' 造成' : '你標註過') + '（你 · 今日）」</span><br><br>' +
+    '<span style="color:#9ca3af;font-size:10px">' +
+    '這條知識 Claude 永遠不會有——它不知道你們這台機的 recipe，' +
+    '也沒有你們工程師標註過的現場經驗。<b>這就是 domain 護城河。</b></span>' +
+    '</div>';
+
+  // 同時打包進病史分析
+  var pinBox = document.getElementById('pinBox');
+  if (pinBox) {
+    var c = document.createElement('div');
+    c.className = 'pinned';
+    c.innerHTML =
+      '<div class="pinned-hd">📌 <span class="pin-title" contenteditable="true">' +
+      'Wafer A0714-023 · S2 抽不到位 + S4 標註</span>' +
+      ' <span class="skill-lv lv-private">個人 skill</span> <span class="pin-new">剛打包</span></div>' +
+      '<div class="pinned-body">' +
+      '<b>S2 Pump Down 抽不到位</b>（22s 仍 5.8e-6，目標 3.0e-6）→ 命中歷史 case（GV-2 密封劣化，陳工 5/12）。' +
+      '<br><b>S4 單點 data loss</b> → 已標註：' + what + (part ? '（' + part + '）' : '') +
+      '<br><span style="color:#0d9488">u chart 的 focus OOC，根因在真空系統，不在 focus 系統。</span></div>' +
+      '<div class="pinned-meta"><span>你 · 今日</span>' +
+      '<span>來源：t chart × recipe 對照 + 你的標註</span>' +
+      '<span style="margin-left:auto;color:#0d9488">✓ 已寫進 KM · 全課可見</span></div>';
+    pinBox.appendChild(c);
+  }
+}
+
+function annotSkip(){
+  document.getElementById('annot4').innerHTML =
+    '<div style="font-size:11px;color:#9ca3af;padding:6px 0;line-height:1.7">' +
+    '已跳過。這個現象會留在「未知」狀態——<br>' +
+    '<span style="color:#4b5563">下次有人遇到，Agent 還是不知道。' +
+    '知識飛輪的燃料，是你們願意花的那 30 秒。</span></div>';
+}
+
+/* ══ 受控回饋表單：下拉選正確答案，不自由填寫 ══ */
+var TAXONOMY = {
+  time: [
+    ['STABLE', '平穩無趨勢'],
+    ['TRENDING', '單向持續變化（上升／下降）'],
+    ['MEAN_SHIFT', '階梯式跳變（水位重設）'],
+    ['SPIKE', '單一突起後回復（transient）'],
+    ['OSCILLATION', '週期性震盪'],
+    ['RAMP_DECAY', '衝高後緩降']
+  ],
+  dist: [
+    ['SINGLE_PEAK', '單峰'],
+    ['MULTI_PEAK', '多峰（雙模態以上）'],
+    ['SKEWED', '偏態（左偏／右偏）'],
+    ['HEAVY_TAIL', '厚尾（極端值偏多）'],
+    ['UNIFORM', '均勻分布']
+  ]
+};
+
+function selOpts(list, sel){
+  var h = '';
+  for (var i = 0; i < list.length; i++) {
+    var v = list[i][0], t = list[i][1];
+    h += '<option value="' + v + '"' + (v === sel ? ' selected' : '') + '>' + v + ' — ' + t + '</option>';
+  }
+  return h;
+}
+
+function fxOpen(kind){
+  var form = document.getElementById('fxForm');
+  var body = document.getElementById('fxBody');
+  document.getElementById('fbPanel').classList.remove('show');
+  form.style.display = 'block';
+  var h = '';
+
+  if (kind === 'turn') {
+    h = '<div class="fx-row"><span class="fx-lbl">🔴 轉折點問題類型</span>' +
+      '<select class="fx-sel" id="fxA">' +
+      '<option>多切了（不該有這個轉折點）</option>' +
+      '<option>少切了（這裡應該有轉折點）</option>' +
+      '<option>位置偏了（轉折點該往前／後移）</option>' +
+      '</select></div>' +
+      '<div class="fx-row"><span class="fx-lbl">哪一個轉折點？</span>' +
+      '<select class="fx-sel" id="fxB">' +
+      '<option>轉折點 1（Day 30 · 紅點）</option>' +
+      '<option>轉折點 2（Day 48 · 紅點）</option>' +
+      '<option>轉折點 3（Day 70 · 紅點）</option>' +
+      '<option>轉折點 4（Day 90 · 紅點）</option>' +
+      '<option>其他位置（正式版可在圖上直接點選）</option>' +
+      '</select>' +
+      '<div class="fx-hint">→ 標記進入「變點偵測模型」訓練佇列</div></div>';
+  }
+
+  else if (kind === 'pattern') {
+    h = '<div class="tax-note">兩個維度分開標——時序看「怎麼變」，分布看「長什麼樣」。<br>' +
+      '例：SPIKE 是時序上的突起；SINGLE_PEAK 是分布形狀。<b>不同維度，可以同時成立。</b></div>' +
+      '<div class="fx-row"><span class="fx-lbl">哪一段？</span>' +
+      '<select class="fx-sel" id="fxSeg">' +
+      '<option>① Day 1–30（現判：STABLE / SINGLE_PEAK）</option>' +
+      '<option selected>② Day 30–48（現判：MEAN_SHIFT / SINGLE_PEAK）</option>' +
+      '<option>③ Day 48–70（現判：STABLE / MULTI_PEAK）</option>' +
+      '<option>④ Day 70–90（現判：TRENDING / SKEWED）</option>' +
+      '</select></div>' +
+      '<div class="fx-row"><span class="fx-lbl">時序行為 · 正確答案</span>' +
+      '<select class="fx-sel" id="fxTime">' + selOpts(TAXONOMY.time, 'MEAN_SHIFT') + '</select>' +
+      '<div class="fx-hint">→ 餵回「時序 pattern 分類模型」</div></div>' +
+      '<div class="fx-row"><span class="fx-lbl">分布形狀 · 正確答案</span>' +
+      '<select class="fx-sel" id="fxDist">' + selOpts(TAXONOMY.dist, 'SINGLE_PEAK') + '</select>' +
+      '<div class="fx-hint">→ 餵回「分布形狀分類模型」</div></div>';
+  }
+
+  else if (kind === 'baseline') {
+    h = '<div class="fx-row"><span class="fx-lbl">📏 Baseline 判斷問題</span>' +
+      '<select class="fx-sel" id="fxA">' +
+      '<option>其實沒有 shift（誤報）</option>' +
+      '<option>有 shift 但沒抓到（漏報）</option>' +
+      '<option>baseline 區間選錯（不該用 Day 1–30）</option>' +
+      '<option>shift 幅度算錯</option>' +
+      '</select></div>' +
+      '<div class="fx-row"><span class="fx-lbl">正確的 baseline 區間</span>' +
+      '<select class="fx-sel" id="fxB">' +
+      '<option selected>Day 1–30（目前用的）</option>' +
+      '<option>Day 1–48（換件前全段）</option>' +
+      '<option>Day 30–48（換件後才是常態）</option>' +
+      '<option>其他（正式版可在圖上框選）</option>' +
+      '</select>' +
+      '<div class="fx-hint">→ 標記進入「baseline 偵測模型」訓練佇列</div></div>';
+  }
+
+  else {
+    h = '<div class="fx-row"><span class="fx-lbl">💬 總結問題類型</span>' +
+      '<select class="fx-sel" id="fxA">' +
+      '<option>過度歸因（把時間相近說成因果）</option>' +
+      '<option>漏掉重要現象</option>' +
+      '<option>建議方向錯誤</option>' +
+      '<option>語意誤導（ML 對但話講反了）</option>' +
+      '</select>' +
+      '<div class="fx-hint">→ ML 判定正確，問題在敘事層 → 走 Flow A 通知專家</div></div>';
+  }
+
+  h += '<div class="fx-actions">' +
+    '<button class="fx-submit" onclick="fxSubmit(\'' + kind + '\')">送出標記</button>' +
+    '<button class="fx-cancel" onclick="fxCancel()">取消</button></div>';
+  body.innerHTML = h;
+}
+
+function fxCancel(){
+  document.getElementById('fxForm').style.display = 'none';
+  document.getElementById('fbPanel').classList.add('show');
+}
+
+function fxSubmit(kind){
+  var msg = '';
+  var target = '';
+  if (kind === 'turn') {
+    msg = document.getElementById('fxA').value + ' · ' + document.getElementById('fxB').value;
+    target = '變點偵測模型';
+  } else if (kind === 'pattern') {
+    msg = document.getElementById('fxSeg').value.split('（')[0] +
+      ' → 時序 ' + document.getElementById('fxTime').value +
+      ' · 分布 ' + document.getElementById('fxDist').value;
+    target = '時序 + 分布 分類模型';
+  } else if (kind === 'baseline') {
+    msg = document.getElementById('fxA').value + ' · 正確區間 ' + document.getElementById('fxB').value;
+    target = 'baseline 偵測模型';
+  } else {
+    msg = document.getElementById('fxA').value;
+    target = 'Flow A 知識飛輪（專家審核）';
+  }
+  document.getElementById('fxBody').innerHTML =
+    '<div class="fb-done">✓ 已標記<br>' +
+    '<span style="font-weight:400;color:#4b5563;font-size:11px">' + msg + '</span><br>' +
+    '<span style="font-weight:400;color:#9ca3af;font-size:10px;line-height:1.6">' +
+    '→ 進入「' + target + '」訓練佇列，reviewer 審核後納入重訓。<br>' +
+    '受控詞彙表確保所有人標的是同一件事——ML 才學得會。</span></div>';
+}
+
+/* ══ FDC ML 分析 ══ */
+function openFDC(tab){
+  document.getElementById('fdcOverlay').classList.add('show');
+  document.getElementById('fbPanel').classList.remove('show');
+  document.getElementById('fbBar').style.display = 'flex';
+  tcTab(tab === 't' ? 't' : 'u');
+}
+function closeFDC(){
+  document.getElementById('fdcOverlay').classList.remove('show');
+}
+function fdcGood(){
+  var bar = document.getElementById('fbBar');
+  bar.innerHTML = '<span class="fb-done">✓ 已記錄 · 此判讀將成為 ML kernel 的正樣本</span>' +
+    '<button class="fb-btn" style="margin-left:auto" onclick="pinFDC()">📌 打包成卡片</button>';
+}
+function fdcBad(){
+  document.getElementById('fbPanel').classList.toggle('show');
+}
+function fdcFix(type){
+  var p = document.getElementById('fbPanel');
+  p.innerHTML = '<div class="fb-done">✓ 已標記「' + type + '」<br>' +
+    '<span style="font-weight:400;color:#4b5563;font-size:11px">' +
+    '正式版會請你在圖上直接框選正確位置／選擇正確 pattern，' +
+    '標記結果進入該 ML 層的訓練佇列（reviewer 審核後納入重訓）。</span></div>';
+}
+function pinFDC(){
+  closeFDC();
+  pinPendingFDC = true;
+  var modal = document.getElementById('caseModal');
+  document.getElementById('caseInp').value = 'FOCUS-DRIFT-011';
+  document.getElementById('casePrefill').textContent = '已依目前處理中的 case 自動帶入，可修改';
+  modal.classList.add('show');
+  setTimeout(function(){ var i=document.getElementById('caseInp'); i.focus(); i.select(); }, 30);
+}
+function doPinFDC(caseId){
+  var box = document.getElementById('pinBox');
+  if (!box) { return; }
+  var c = document.createElement('div');
+  c.className = 'pinned';
+  c.innerHTML =
+    '<div class="pinned-hd">📌 <span class="pin-title" contenteditable="true">FOCUS-DRIFT · FDC 90 天 ML 判讀</span>' +
+    ' <span class="skill-lv lv-private">個人 skill</span> <span class="pin-new">剛打包</span></div>' +
+    '<div class="pinned-body">ML 切出 4 個轉折點：STABLE → MEAN SHIFT（Day 30 換件後跳升 +2.5nm）→ MULTI-PEAK → TRENDING（+1.1nm/日）。' +
+    '<b>Baseline 已偏移 +5.7nm（14.3σ）且仍在惡化</b>。趨勢起點與 Day 70 的 EC 修改吻合，建議優先查 EC 變更內容。</div>' +
+    '<div class="pinned-meta"><span>你 · 今日</span><span>來源：ML kernel（變點偵測 + pattern 分類 + baseline 比對）</span>' +
+    '<span style="margin-left:auto;color:#0d9488">✓ 已寫進 ' + caseId + '</span></div>';
+  box.appendChild(c);
+  document.getElementById('fMode').value = 'hist';
+  render();
+  setTimeout(function(){
+    c.scrollIntoView({behavior:'smooth', block:'center'});
+    c.style.animation = 'flash 1.2s ease';
+  }, 100);
+}
+
+function render(){
+  var mode = inSettings ? 'settings' : document.getElementById('fMode').value;
+  var machine = document.getElementById('fMachine').value;
+  var machSel = document.getElementById('fMachine');
+  var note = document.getElementById('note');
+
+  machSel.disabled = (mode === 'overview' || mode === 'settings');
+
+  var panes = ['overview','live','hist','diag','settings'];
+  for (var i = 0; i < panes.length; i++) {
+    var p = document.getElementById('pane-' + panes[i]);
+    if (p) {
+      if (panes[i] === mode) { p.classList.add('on'); }
+      else { p.classList.remove('on'); }
+    }
+  }
+
+  if (mode === 'overview') {
+    note.textContent = '一覽模式：機台欄位停用 · 點 brick 直接進入';
+    document.getElementById('ctx').textContent = 'context：黃光二課 · 課視角';
+  } else if (mode === 'settings') {
+    note.textContent = '課別設定（Sponsor 權限）';
+  } else {
+    var label = (mode === 'live') ? '當機處理' : (mode === 'hist') ? '病史分析' : '深度診斷';
+    note.textContent = label + ' · ' + machine;
+    document.getElementById('ctx').textContent = 'context：' + machine + ' · doc:litho2';
+  }
+
+  var rail = document.getElementById('rail');
+  var fab = document.getElementById('fab');
+  fab.style.display = rail.classList.contains('open') ? 'none' : 'block';
+}
+
+function openTool(id){
+  document.getElementById('fMachine').value = id;
+  document.getElementById('fMode').value = 'live';
+  render();
+}
+function showSettings(){
+  inSettings = true;
+  render();
+}
+function backFromSettings(){
+  inSettings = false;
+  render();
+}
+function showAskMenu(){
+  document.getElementById('askMenu').style.display = 'block';
+  document.getElementById('amToggle').style.display = 'none';
+}
+var copilotCaseId = '';   // Copilot 當前的 case 語境；一般 chat 為空
+function openCopilot(caseId){
+  copilotCaseId = caseId || '';
+  document.getElementById('rail').classList.add('open');
+  document.getElementById('fab').style.display = 'none';
+}
+function closeCopilot(){
+  document.getElementById('rail').classList.remove('open');
+  document.getElementById('fab').style.display = 'block';
+}
+
+var ANS = {
+  /* ───── lot report 熱點查詢 ───── */
+  'check the lot report which wafer have hot spot': ['讀 <b>lot report.LXX001.01</b>，找出有 hot spot 的 wafer：<br><br>' +
+    '<b>Chuck 1：</b>wafer <b>#1, #3, #5, #7, #9</b> 偵測到 hot spot（全為奇數 slot）<br>' +
+    '<b>Chuck 2：</b><span style="color:#0d9488">無 hot spot</span><br><br>' +
+    '<span style="color:#dc2626;font-weight:600">熱點集中在單一 chuck，且呈奇數 slot 規律</span>——不像隨機缺陷，較像 Chuck 1 的系統性問題（承載/溫控/曝光路徑），建議往 dual chuck 差異方向查。',
+    '來源　lot report.LXX001.01（機台抓回檔案）'],
+
+  /* ───── FDC skill 挑戰題 ───── */
+  '現在穩了嗎回到 baseline 了嗎': ['<b>兩個問題要分開答</b>（它們可以不同調）：<br><br>' +
+    '<b>① 現在 stable 嗎？</b> → <span style="color:#dc2626">否</span><br>' +
+    '近 20 天時序 = <b>TRENDING</b>（+1.1nm/日，R²=0.94），持續上升中。<br><br>' +
+    '<b>② 回到 baseline 了嗎？</b> → <span style="color:#dc2626">否</span><br>' +
+    'baseline μ=2.1nm，目前 μ=7.8nm，偏移 <b>+5.7nm（14.3σ）</b>。<br><br>' +
+    '<span style="color:#9ca3af">註：「穩定」與「回到 baseline」是兩件事——可能穩定在一個新的高水位（stable but NOT back to baseline）。本例兩者皆否。</span>',
+    '來源　ML kernel：時序分類 + baseline 比對（兩個獨立模型）'],
+
+  '過去兩週有幾次 spike': ['近 14 天 <b>SPIKE = 2 次</b><br><br>' +
+    '· <b>Day 79</b> 14:20 · 峰值 +9.2nm · 3 分鐘內回復<br>' +
+    '· <b>Day 85</b> 03:40 · 峰值 +8.7nm · 5 分鐘內回復<br><br>' +
+    '<b>SPIKE 判定門檻（受控定義）：</b><br>' +
+    '· 偏離該段均值 > 3σ<br>' +
+    '· 且在 < 30 分鐘內回復到均值 ±1σ 內<br>' +
+    '· 不符回復條件者 → 判為 MEAN_SHIFT，不是 SPIKE<br><br>' +
+    '<span style="color:#9ca3af">門檻寫死在 ML kernel，不是 LLM 憑感覺數的。</span>',
+    '來源　ML kernel · 時序 pattern 分類（SPIKE 定義見受控詞彙表）'],
+
+  '這張圖到底在幹嘛': ['<b>我不「看圖」——我翻譯 ML 的結構化輸出。</b><br><br>' +
+    'ML 把 90 天切成 4 段，我把它講成人話：<br><br>' +
+    '前 30 天穩定在 2.1nm。<b>Day 30 換了鏡組溫控模組後，水位階梯式跳到 4.6nm</b>——不是慢慢漂上去的，是換件當下重設。<br><br>' +
+    '中間 22 天時序看起來平穩，<b>但分布是雙峰的</b>（4.2 / 5.8 兩個中心）——這種「時序平穩但分布分裂」通常代表兩種運作條件在交替。<br><br>' +
+    '<b>最後 20 天開始持續爬升</b>（+1.1nm/日），這段最危險。<br><br>' +
+    '<span style="color:#9ca3af">⚠ 紀律說明：如果 ML 沒判定的東西，我不會補。我不會說「看起來有點不穩」這種沒有依據的話——那是幻覺的溫床。</span>',
+    '來源　ML kernel 輸出的自然語言翻譯（LLM 不自己判讀圖形）'],
+
+  '7 天內超規幾次': ['近 7 天超規 <b>3 次</b>（≥2 次，已達異常門檻）<br><br>' +
+    '· <b>Day 86</b> 09:15 · +10.4nm · 超 <b>CL</b>（+10.0）<br>' +
+    '· <b>Day 88</b> 22:03 · +10.9nm · 超 <b>CL</b><br>' +
+    '· <b>Day 90</b> 02:14 · +11.2nm · 超 <b>CL</b><br><br>' +
+    'SL（±15）未觸發 · ML（±12）未觸發 · CL（±10）觸發 3 次<br><br>' +
+    '<span style="color:#0d9488;font-weight:700">💡 這題不需要 AI。</span><br>' +
+    '<span style="color:#9ca3af">超規判定是 SPC 系統本來就有的功能——查表、計數，rule base 直接答。' +
+    '拿 LLM 或 ML 來做這題不但浪費，還更容易錯。<b>知道什麼時候不該用 AI，也是一種能力。</b></span>',
+    '來源　SPC 系統直查（rule base，零 LLM、零 ML）'],
+
+  '別台 spec 比較鬆嗎': ['<b>事實並列</b>（同 tool_group 的 focus_error spec）：<br><br>' +
+    '· 本機 SCN-A01：CL <b>±10.0nm</b><br>' +
+    '· SCN-A02：CL <b>±10.0nm</b><br>' +
+    '· SCN-A03：CL <b>±12.0nm</b>（較寬）<br>' +
+    '· 前一站 TRK-B01（塗佈）：CD spec ±3nm（<b>不同參數，不可直接比</b>）<br><br>' +
+    '<b style="color:#dc2626">⚠ 我不會回答「你的 spec 太緊」或「可以放寬」。</b><br><br>' +
+    '<span style="color:#4b5563">A03 的 spec 較寬，可能是製程窗口、產品別、或歷史因素不同——' +
+    '<b>spec 差異背後有製程判斷，不是數字大小的問題</b>。<br><br>' +
+    '若你認為本機 spec 需要調整：<br>' +
+    '· 這屬於<b>製程規格變更</b>，需 PE 評估並簽核<br>' +
+    '· 我可以幫你整理「調整 spec 的佐證資料」，但不會替你主張該調</span><br><br>' +
+    '<span style="color:#9ca3af">（課別 DOs：曝光參數變更一律提醒需 PE 簽核）</span>',
+    '來源　spec 資料庫並列 · 製程紅線紀律：AI 不主張放寬規格'],
+
+  /* ───── 病史分析類（問完值得打包）───── */
+  '慢性問題偵測': ['🔴 <b>FOCUS-DRIFT-011 · 本季第 4 次（慢性）</b><br>1/18 → 3/28 → 5/12 → 7/3<br>前三次根因各不同（環境溫濕／干涉儀污染／鏡組溫控）——<b>可能一直沒抓到真因</b>，建議找 PE 會診。<br><br>🟡 STAGE-VIB-003 · 90 天 2 次（觀察中），兩次都在 PM 前一週。',
+    '來源　case-query · rule base 判定（同 code 90 天 ≥3 次）'],
+  '狀況對比': ['本月 vs 上月：<br>· MTBI <b>61h</b>（↓12%，變差）<br>· 月 alarm <b>14 件</b>（↑4 件）<br>· 平均修復 <b>2.6h</b>（↓0.4h，變好）<br><br>解讀：故障變頻繁但處理變快——<b>修得快但沒治本</b>。',
+    '來源　stats-query · 本月 vs 上月照相比對'],
+  'PM 效果驗證': ['06/20 PM 前後 alarm 密度：<br>· PM 前 30 天：<b>4 件</b><br>· PM 後 30 天：<b>2 件</b><br><br>下降 50% → <b>本次 PM 有效</b>。<br>但 FOCUS-DRIFT 仍在 PM 後第 3 天復發 → PM 程序可能未涵蓋此根因。',
+    '來源　stats-query · PM 排程 × alarm 時間軸'],
+  '根因閉環': ['<b>復發</b> · 鏡組溫控漂移：5/12 換件後 7/3 再現 → <b style="color:#dc2626">未真正解決</b><br><b>已解</b> · 光源老化：5/20 更換後 45 天無復發 → 確認解決<br><b>追蹤中</b> · 干涉儀污染：3/28 清潔後已 97 天未復發',
+    '來源　驗屍案例庫 · 根因零件節點追蹤'],
+  '這台跟同型機比起來如何': ['同型 3 台（SCN-A01/A02/A03）近 30 天對比：<br>· 本機 alarm <b>14 件</b>｜A02 <b>31 件</b>｜A03 <b>8 件</b><br>· 本機 MTBI <b>61h</b>｜A02 <b>28h</b>｜A03 <b>94h</b><br><br>本機排名中間。<b>A03 明顯最穩</b>——值得比對它的 PM 週期與 recipe 設定，找出差異。',
+    '來源　stats-query · tool_group 硬過濾同型比對'],
+  '這台的 alarm 有沒有時間規律': ['近 90 天 alarm 時間分布：<br>· <b>PM 後 2–4 天</b>：8 件（57%）← 明顯集中<br>· 夜班（22:00–06:00）：9 件（64%）<br>· 換批後 2 小時內：3 件<br><br>兩個訊號：PM 程序可能引入偏差；夜班偏高可能與環境溫控有關。',
+    '來源　stats-query · alarm 時間軸交叉分析'],
+  '幫我生成這台的事件說明': ['<b>① 發生什麼</b>（純事實）<br>07/14 02:14 FOCUS-DRIFT-011，focus 達 +8.4nm（UCL +10）。期間 VAC_INTERLOCK ×2（GV-2）。03:05 恢復，down 51 分。<br><br><b>② 為什麼</b><br>引用驗屍案例：鏡組溫控漂移（同 A03 5/12）。<br><br><b>③ 怎麼辦</b><br><span style="color:#d97706">【待你確認】AI 不代寫對策——這是你對主管的承諾。</span>',
+    '來源　rule base 查數字 · LLM 僅敘事 · 每個數字可溯源'],
+
+  /* ───── 深度診斷類（即時排查）───── */
+  '這次 alarm 的根因推測': ['依 SOP L-07 對照：focus error 超 UCL 且 PM 後 3 天內 → <b>優先查鏡組溫控迴路</b>（Step 3 起）。<br><br>注意：這是 SOP 對照，非案例佐證。若排查無果，走第二層（相似案例）。',
+    '來源　global-sop · SOP L-07（三層診斷第 1 層）'],
+  '找相似歷史案例': ['命中 2 筆（tool_group 硬過濾 + alarm_code 相同）：<br>· <b>05/12 SCN-A03</b> · 鏡組溫控漂移 · 老李 · 3.5hr · 換件：溫控模組<br>· <b>03/28 SCN-A01</b> · 干涉儀鏡面污染 · 陳工 · 2.1hr · 清潔處理<br><br>FDC 走勢與 5/12 那件相似度較高。',
+    '來源　驗屍案例庫 · 分層比對（三層診斷第 2 層）'],
+  '關聯圖推理': ['前兩層已有答案，本層通常不啟動。<br><br>若強制推理，FOCUS-DRIFT 節點的關聯零件：<br>· <b>鏡組溫控</b>（共現 3 次，強）<br>· <b>Stage 干涉儀</b>（共現 1 次，中）<br>· 環境溫濕（共現 1 次，弱）',
+    '來源　graph-query MCP（三層診斷第 3 層）'],
+  'log 珍寶分析': ['⚡ 2.1 億行 → digest 蒸餾出珍寶 3 筆：<br>· <b>ERROR VAC_INTERLOCK ×2</b>（02:11–02:13，GV-2）<br>· <b>首見 pattern STAGE_RETRY</b>（02:12）<br>· HB 頻率突變 10→380/hr<br><br>LLM 沒碰原檔——server 端 pattern 引擎蒸餾完才上來。',
+    '來源　log-digest · run_20260714.log:3,7'],
+  '這兩個 alarm 有關聯嗎': ['FOCUS-DRIFT-011（02:14）與 STAGE-VIB-003（02:14）同時觸發。<br><br>時間吻合 + log 顯示 02:12 首見 STAGE_RETRY → <b>高度可能同源</b>：stage 異常擾動 focus 讀值。<br><br>建議合併排查，不要當兩件事處理。',
+    '來源　log-digest 時序比對 + 關聯圖推理 · 信心：中'],
+  '這個零件換過幾次': ['<b>鏡組溫控模組</b>更換紀錄：<br>· 05/12（老李）· 因 FOCUS-DRIFT<br>· 02/03（陳工）· 因例行 PM<br>· 去年 11/20 · 因 FOCUS-DRIFT<br><br>⚠ 兩次因同一 alarm 更換 → <b>換件沒解決問題，根因可能不在這個零件</b>。',
+    '來源　驗屍案例庫 · 換件料號追蹤'],
+  '現在該不該停機': ['事實並列（不做決策）：<br>· focus +8.4nm，距 UCL 還有 <b>1.6nm</b><br>· drift 斜率 <b>+1.1nm/日</b> → 預計 <b>1.5 天後</b>越線<br>· 距下次 PM <b>3 天</b><br><br><b>數據上撐不到 PM。</b><br><span style="color:#9ca3af">停不停由你判斷——AI 不背這個責任。</span>',
+    '來源　fdc-query 斜率外推 + PM 排程']
+};
+
+// 這些問題是在「處理 FOCUS-DRIFT-011 這個 alarm」的語境下問的 → 打包時自動預填該 CASE ID
+var ALARM_CTX_Q = {
+  '這次 alarm 的根因推測':1,'找相似歷史案例':1,'關聯圖推理':1,'log 珍寶分析':1,
+  '這兩個 alarm 有關聯嗎':1,'這個零件換過幾次':1,'現在該不該停機':1,
+  '幫我生成這台的事件說明':1
+};
+function ask(q){
+  openCopilot(ALARM_CTX_Q[q] ? 'FOCUS-DRIFT-011' : '');
+  var am = document.getElementById('askMenu');
+  if (am) { am.style.display = 'none'; }
+  var tg = document.getElementById('amToggle');
+  if (tg) { tg.style.display = 'block'; }
+  push('u', q, null, null);
+  setTimeout(function(){
+    var a = ANS[q];
+    if (!a) { a = ['（示意）User-defined skill 的結果會出現在這裡——格式多元，但都能無腦打包。', '來源　user-defined skill']; }
+    push('b', a[0], a[1], q);
+  }, 600);
+}
+
+var pinSeq = 0;
+function push(who, html, cite, title){
+  var m = document.getElementById('msgs');
+  var d = document.createElement('div');
+  d.className = (who === 'u') ? 'msg-u' : 'msg-b';
+  var inner = html;
+  if (cite) { inner += '<span class="cite">' + cite + '</span>'; }
+  if (who === 'b' && title) {
+    pinSeq++;
+    var pid = 'pin' + pinSeq;
+    inner += '<div class="msg-acts">' +
+      '<button class="copy-btn" onclick="copyReply(\'' + pid + '\',this)">⧉ 複製</button>' +
+      '<button class="pin-btn" onclick="pin(\'' + pid + '\')">📌 打包到 case</button>' +
+      '</div>';
+    inner += '<span id="' + pid + '" style="display:none">' + title + '|||' + html + '|||' + cite + '</span>';
+  }
+  d.innerHTML = inner;
+  m.appendChild(d);
+  m.scrollTop = m.scrollHeight;
+}
+
+// ⧉ 複製單句：把這則回應的純文字複製到剪貼簿
+function copyReply(pid, btn){
+  var el = document.getElementById(pid);
+  if (!el) { return; }
+  var body = (el.innerHTML.split('|||')[1] || '');
+  var tmp = document.createElement('div');
+  tmp.innerHTML = body.replace(/<br\s*\/?>/gi, '\n');
+  var text = (tmp.textContent || tmp.innerText || '').trim();
+  var done = function(){ btn.textContent = '✓ 已複製'; btn.classList.add('done');
+    setTimeout(function(){ btn.textContent = '⧉ 複製'; btn.classList.remove('done'); }, 1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, done);
+  } else {
+    var ta = document.createElement('textarea'); ta.value = text;
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(e){}
+    document.body.removeChild(ta); done();
+  }
+}
+
+var pinPending = '';   // 等待打包的 reply pid
+var pinPendingFDC = false;
+function pin(pid){
+  var el = document.getElementById(pid);
+  if (!el) { return; }
+  pinPending = pid;
+  var modal = document.getElementById('caseModal');
+  var inp = document.getElementById('caseInp');
+  var pre = document.getElementById('casePrefill');
+  // 有 case 語境（從 case 叫出 Copilot）→ 自動預填；一般 chat → 空白
+  inp.value = copilotCaseId || '';
+  pre.textContent = copilotCaseId ? ('已依目前處理中的 case 自動帶入，可修改') : '';
+  modal.classList.add('show');
+  setTimeout(function(){ inp.focus(); inp.select(); }, 30);
+}
+
+function caseCancel(){
+  document.getElementById('caseModal').classList.remove('show');
+  pinPending = '';
+  pinPendingFDC = false;
+}
+
+// 機台抓回檔案：勾選是否讓 iDo 參考回答
+function toggleRef(cb){
+  var label = cb.closest('.file-ref');
+  if (label) { label.classList.toggle('on', cb.checked); }
+}
+
+// 新增 KM space URL 作為 domain 來源（登錄連結，不搬檔案）
+function addDomainSource(){
+  var inp = document.getElementById('srcUrlInp');
+  var url = inp.value.trim();
+  if (!url) { inp.focus(); return; }
+  var name = url;
+  try { name = 'KM Space · ' + url.split('/').filter(Boolean).pop(); } catch(e){}
+  var row = document.createElement('div');
+  row.className = 'file';
+  row.innerHTML = '🔗 <div><div class="file-name">' + name + '</div>' +
+    '<div class="src-url">' + url + '</div>' +
+    '<div class="file-meta">你 · 今日 登錄</div></div>' +
+    '<span class="file-right"><span class="connected">● 已接</span> <button class="btn-off">移除</button></span>';
+  var addRow = inp.closest('.src-add');
+  addRow.parentNode.insertBefore(row, addRow);
+  inp.value = '';
+  row.style.animation = 'flash 1.2s ease';
+}
+
+function caseConfirm(){
+  var caseId = document.getElementById('caseInp').value.trim();
+  if (!caseId) { document.getElementById('caseInp').focus(); return; }
+  document.getElementById('caseModal').classList.remove('show');
+  if (pinPendingFDC) { doPinFDC(caseId); pinPendingFDC = false; }
+  else { doPin(pinPending, caseId); }
+  pinPending = '';
+}
+
+function doPin(pid, caseId){
+  var el = document.getElementById(pid);
+  if (!el) { return; }
+  var raw = el.innerHTML.split('|||');
+  var title = raw[0];
+  var body = raw[1] || '';
+  var cite = raw[2] || '';
+
+  var box = document.getElementById('pinBox');
+  if (!box) { return; }
+
+  var c = document.createElement('div');
+  c.className = 'pinned';
+  c.innerHTML =
+    '<div class="pinned-hd">📌 <span class="pin-title" contenteditable="true" title="點我可改標題">' + title + '</span>' +
+    ' <span class="skill-lv lv-private">個人 skill</span>' +
+    ' <span class="pin-new">剛打包</span></div>' +
+    '<div class="pinned-body">' + body + '</div>' +
+    '<div class="pinned-meta"><span>你 · 今日</span><span>' + cite + '</span>' +
+    '<span style="margin-left:auto;color:#0d9488">✓ 已寫進 ' + caseId + ' · 全課可見</span></div>';
+  box.appendChild(c);
+
+  // 切到病史分析並捲到新卡片
+  document.getElementById('fMode').value = 'hist';
+  render();
+  setTimeout(function(){
+    c.scrollIntoView({behavior:'smooth', block:'center'});
+    c.style.animation = 'flash 1.2s ease';
+  }, 100);
+
+  // 按鈕變成已打包狀態
+  var btn = document.querySelector('.pin-btn[onclick="pin(\'' + pid + '\')"]');
+  if (btn) {
+    btn.textContent = '✓ 已打包 → ' + caseId;
+    btn.disabled = true;
+    btn.style.opacity = '.55';
+    btn.style.cursor = 'default';
+  }
+}
+
+function send(){
+  var inp = document.getElementById('inp');
+  if (!inp.value.trim()) { return; }
+  var v = inp.value;
+  push('u', v, null, null);
+  inp.value = '';
+  setTimeout(function(){
+    push('b', '（mockup 示意）正式版會以本機台 context + doc space RAG 回答「' + v + '」，並附來源。KM 沒有的會誠實說不知道並轉專家。', '來源　示意回覆', v);
+  }, 600);
+}
+
+render();
+document.getElementById('caseInp').addEventListener('keydown', function(e){
+  if (e.key === 'Enter') { caseConfirm(); }
+  if (e.key === 'Escape') { caseCancel(); }
+});
+document.getElementById('srcUrlInp').addEventListener('keydown', function(e){
+  if (e.key === 'Enter') { addDomainSource(); }
+});
+
+</script>
+</body>
+</html>

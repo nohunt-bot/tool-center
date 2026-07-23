@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/*
+ * Design token —— 來源：urd/tool-center-gui.html L8–17
+ *
+ * 狀態色（--st-*）是產品要求的語義色：大格（機台）與小格（chamber）可以是不同狀態，
+ * 但同一個狀態在任何地方都必須是同一個顏色（mockup L565）。
+ * 因此狀態色只有這一份定義，元件不得自行寫死色碼——一律走 src/lib/status.ts。
+ */
+@theme {
+  /* 介面底色與文字 */
+  --color-bg: #eef0f3;
+  --color-panel: #ffffff;
+  --color-line: #e2e5ea;
+  --color-ink: #14171f;
+  --color-ink2: #4b5563;
+  --color-ink3: #9ca3af;
+
+  /* 強調色 */
+  --color-teal: #0d9488;
+  --color-teal-bg: #ecfdf7;
+  --color-blue: #2563eb;
+  --color-red: #dc2626;
+  --color-red-bg: #fef2f2;
+  --color-gold: #d97706;
+  --color-gold-bg: #fffbeb;
+
+  /* 機台／chamber 狀態色（語義色，不可在元件內另行定義） */
+  --color-st-up: #16a34a;
+  --color-st-down: #dc2626;
+  --color-st-off: #111827;
+  --color-st-weq: #a855f7;
+  --color-st-pm: #7dd3fc;
+  --color-st-lost: #1e3a8a;
+
+  /* 狀態色上的前景色：PM 是淺色底，必須用深色字才看得清楚 */
+  --color-st-up-fg: #ffffff;
+  --color-st-down-fg: #ffffff;
+  --color-st-off-fg: #ffffff;
+  --color-st-weq-fg: #ffffff;
+  --color-st-pm-fg: #0c4a6e;
+  --color-st-lost-fg: #ffffff;
+
+  --font-mono: "Consolas", "Courier New", monospace;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
