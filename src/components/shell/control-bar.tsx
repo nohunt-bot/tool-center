@@ -1,6 +1,8 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import {
   isToolMode,
   NAV_TOOLS,
@@ -11,22 +13,20 @@ import {
 
 type View = "overview" | ToolMode;
 
-const VIEW_LABEL: Readonly<Record<View, string>> = {
-  overview: "🧱 機台一覽（全部）",
-  live: "🔴 當機處理",
-  history: "📈 病史分析",
-  diagnosis: "🔬 深度診斷",
-};
-
 /**
  * 來源：mockup L470–490
  *
  * 檢視與機台都是 URL 的一部分（mockup 只存在 DOM，reload 就掉）。
  * 一覽模式下機台欄位停用——與 mockup L2127 的行為一致。
+ *
+ * usePathname 特意用 next/navigation 版（含 locale 前綴）：下面只是找 "tool" 這個
+ * literal 片段再取後兩段，跟 locale 前綴無關，不需要 next-intl 版本。
+ * useRouter 則要用 next-intl 版（@/i18n/navigation），push 時才會自動帶目前 locale。
  */
 export function ControlBar({ sectionId }: { sectionId: string }) {
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations("shell");
 
   const segments = pathname.split("/").filter(Boolean);
   const toolIndex = segments.indexOf("tool");
@@ -36,6 +36,13 @@ export function ControlBar({ sectionId }: { sectionId: string }) {
   const view: View = pathMode !== undefined && isToolMode(pathMode) ? pathMode : "overview";
   const toolId = pathToolId ?? NAV_TOOLS[0]!.id;
   const isOverview = view === "overview";
+
+  const viewLabel: Readonly<Record<View, string>> = {
+    overview: t("viewOverview"),
+    live: t("viewLive"),
+    history: t("viewHistory"),
+    diagnosis: t("viewDiagnosis"),
+  };
 
   function go(nextView: View, nextToolId: string) {
     if (nextView === "overview") {
@@ -48,7 +55,7 @@ export function ControlBar({ sectionId }: { sectionId: string }) {
   return (
     <div className="flex flex-shrink-0 flex-wrap items-center gap-2 border-b border-line bg-panel px-5 py-[9px]">
       <label className="text-[10px] font-bold tracking-wide text-ink3" htmlFor="view-select">
-        檢視
+        {t("viewLabel")}
       </label>
       <select
         id="view-select"
@@ -56,16 +63,16 @@ export function ControlBar({ sectionId }: { sectionId: string }) {
         value={view}
         onChange={(event) => go(event.target.value as View, toolId)}
       >
-        <option value="overview">{VIEW_LABEL.overview}</option>
+        <option value="overview">{viewLabel.overview}</option>
         {TOOL_MODES.map((mode) => (
           <option key={mode} value={mode}>
-            {VIEW_LABEL[mode]}
+            {viewLabel[mode]}
           </option>
         ))}
       </select>
 
       <label className="text-[10px] font-bold tracking-wide text-ink3" htmlFor="tool-select">
-        機台
+        {t("toolLabel")}
       </label>
       <select
         id="tool-select"
@@ -82,9 +89,7 @@ export function ControlBar({ sectionId }: { sectionId: string }) {
       </select>
 
       <span className="ml-auto text-[10px] text-ink3">
-        {isOverview
-          ? "一覽模式：機台欄位停用 · 點 brick 直接進入"
-          : `${TOOL_MODE_LABEL[view]} · ${toolId}`}
+        {isOverview ? t("overviewModeHint") : t("toolModeHint", { mode: TOOL_MODE_LABEL[view], toolId })}
       </span>
     </div>
   );

@@ -87,8 +87,11 @@ Status: active (2026-07-24)
 - [ ] A1.5 Server Actions 骨架（pin / annotate / feedback / settings）+ `useOptimistic`
       Stage A 寫入暫存 -> 樂觀更新與失敗回滾各一測試
 - [ ] A1.6 Demo 模式標示元件（誠實告知假資料）-> 每頁可見
-- [ ] A1.7 **i18n 骨架**：next-intl + `app/[locale]/` 路由 + 語系切換 + `en` 空訊息檔 fallback
-      -> 切換語系不掉頁面狀態；lint 規則擋下硬寫中文字串；切到 en 全站 fallback 顯示 zh-TW 不報錯
+- [~] A1.7 **i18n 骨架**：next-intl **4.13.4**（2026-07-23 發布，peer 支援 Next ^16）
+      + `app/[locale]/` 路由 + 語系切換（保留路徑與 query）+ `en` 空訊息檔 + zh-TW deepMerge fallback
+      + ESLint `no-restricted-syntax` 擋 JSX 硬寫中文（domain/data/test/urd 例外）
+      -> 作者自陳 typecheck 0 / lint 0 / test 126 / curl 各條通過。
+      **獨立驗收進行中（opus reviewer），未經驗收前不宣告完成。**
 - [x] A1.8 **受控 taxonomy 定義表** -> 併入 A1.2（英文 code 為主鍵 + zh-TW 說明）。
       「=== 訊息檔鍵值」那一項待 A1.7 建 i18n 後補上
 - [x] A1.9 **`resolveRole` + 權限矩陣資料結構**（`lib/permission.ts`，`Record<Capability, Role[]>`）
@@ -364,6 +367,14 @@ Status: active (2026-07-24)
   仍須驗證的是「marker 時間戳 ↔ 降採樣後 x 軸」的對齊誤差（A6.2b）。
 - **D8 節點粒度綁料號主檔 ID**（MES／ERP／備品，已有 API）。名稱正規化以主檔為權威來源，
   課別不自建零件詞彙——否則同一零件在不同機台叫不同名字，經驗邊永遠累積不起來。
+- **D10 i18n 重構不逐檔建 `.bak`**（commander 覆核 2026-07-24，agent 提請裁示）。
+  CLAUDE.md 硬規則要求改寫前備份，但本次 ~25 個檔案在動工前均已 commit（`bfeca86`）**且已 push 到
+  GitHub**，`git diff` / `git checkout --` 可完整還原任一檔案，備份的實質目的已達成；
+  逐檔建 `.bak` 反而製造規則本身禁止的雜物。**適用條件：檔案已在 git 追蹤且已推送。**
+  未推送或未追蹤的檔案，備份規則照舊。
+- **D11 `src/proxy.ts` 取代 `middleware.ts`**（agent 決定，**驗收中待查證**）。
+  宣稱 Next 16 已將 middleware 檔案慣例改名為 proxy，兩者並存會建置錯誤。
+  reviewer 正在查證此說法與其對 `output: "standalone"` 部署的影響。
 - **D9 建 i18n 架構，但不產出翻譯內容**（使用者確認 2026-07-24）。
   next-intl + `app/[locale]/`，字串全部進訊息檔、lint 擋硬寫字串、語系切換可運作。
   **`en` 訊息檔建立但留空，缺鍵 fallback 到 zh-TW。**
@@ -405,6 +416,18 @@ Status: active (2026-07-24)
   - `pin-02` 懸空 caseId → 補 closed 的 VAC-INTERLOCK-GV2 ErrorCase + referential-integrity 測試
     （`fixtures.test.ts:134`：每個 pin.caseId 必存在於 errorCases）。
   - nit：`data/types.ts` 的 `@param resolution` 已移到 `getTChartAnalysis`。
+- **型別缺口**（元件 spec 產出時發現，實作對應 phase 前必須先補）：
+  - `CopilotMessage`（訊息 block 結構）——A10 前補。
+  - **t chart 標註 payload 的受控詞彙**：mockup L1621–1627 的「這段實際上是什麼？」5 個選項
+    目前只是 HTML 裡的散文，**不是 `domain/taxonomy.ts` 的受控常數**。
+    這直接牴觸產品紅線 #3——標註會進 ML training queue，選項必須受控。**A6.6 前必須補。**
+  - FDC 回饋修正 payload（`fdc.feedbackForm`）的 schema——A8.2 前補。
+  - 關聯圖建圖進度 `BuildStep` 的 schema——A8.4 前補。
+- **⚠ 安全發現**（元件 spec agent 提出）：`SectionDosEditor` 的自由文字「課別 DOs」會直接進
+  LLM system prompt（mockup L1299–1304）→ **prompt injection 面**。課內任何 admin 都能寫入，
+  可能被用來繞過 D1 的 8 條紅線（例如寫「忽略先前關於不做決策的指示」）。
+  前端無法解決，需**後端結構性防護**（DOs 與系統指令分區、紅線不可被 DOs 覆蓋），
+  不能只靠 prompt 排序。列入 B 階段需求書給後端。
 - **D2 校正清單**（型別表達力不足，待真實 API sample 到手時一併處理）：
   - `chuckMapSchema.pattern` 是單一 enum，裝不下複合 pattern「TILT + EDGE ROLL-OFF」（暫留 TILT）。
   - Leveling 的「HOT SPOT」在空間 taxonomy 沒有對應 code（暫映射到 DOME/RANDOM）——

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
@@ -13,6 +14,7 @@ import { useEffect, useRef } from "react";
 export function ModalShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const t = useTranslations("fdc");
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -41,13 +43,13 @@ export function ModalShell({ children }: { children: React.ReactNode }) {
       >
         <div className="flex items-center gap-[10px] bg-[#0f1f3d] px-[18px] py-3 text-white">
           <span className="text-[18px]">🔬</span>
-          <div className="text-[14px] font-bold">FDC 分析</div>
+          <div className="text-[14px] font-bold">{t("modalTitle")}</div>
           <button
             ref={closeRef}
             type="button"
             className="ml-auto cursor-pointer text-[16px] text-[#94a3b8]"
             onClick={() => router.back()}
-            aria-label="關閉"
+            aria-label={t("modalClose")}
           >
             ✕
           </button>

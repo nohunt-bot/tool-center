@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import type { ToolSummary } from "@/domain/tool";
 import { statusToken, TOOL_STATUSES, type ToolStatus } from "@/lib/status";
 import { Brick } from "@/components/overview/brick";
@@ -18,11 +21,13 @@ export function OverviewPane({
   sectionName: string;
   tools: readonly ToolSummary[];
 }) {
+  const t = useTranslations("overview");
+
   if (tools.length === 0) {
     return (
       <div className="h-full overflow-y-auto px-5 py-4">
         <div className="rounded-[10px] border border-dashed border-line bg-panel px-4 py-3 text-[11px] text-ink3">
-          {sectionName}（{sectionId}）目前無機台資料。
+          {t("emptyState", { sectionName, sectionId })}
         </div>
       </div>
     );
@@ -34,9 +39,7 @@ export function OverviewPane({
     <div className="h-full overflow-y-auto px-5 py-4">
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <div className="flex flex-wrap items-center gap-2 text-[14px] font-bold">
-          <span>
-            {sectionName} · {tools.length} 台
-          </span>
+          <span>{t("header", { sectionName, count: tools.length })}</span>
           {CALLOUT_STATUSES.filter((status) => counts[status] > 0).map((status) => (
             <span key={status} className="flex items-center gap-1 text-[13px]">
               <StatusDot status={status} />
@@ -61,9 +64,7 @@ export function OverviewPane({
         ))}
       </div>
 
-      <div className="mt-3 text-center text-[10px] leading-[1.6] text-ink3">
-        大格＝機台 · 小格＝chamber · 底色＝狀態（兩者可不同，色義一致）· 點 brick 直接進入
-      </div>
+      <div className="mt-3 text-center text-[10px] leading-[1.6] text-ink3">{t("footerNote")}</div>
     </div>
   );
 }

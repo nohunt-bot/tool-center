@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   // 內網部署為容器（見 docs/decisions/0001-frontend-stack.md）
@@ -11,4 +12,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// 明確指名 request config 路徑，避免依賴 next-intl 的預設搜尋順序。
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+export default withNextIntl(nextConfig);

@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import type { ToolSummary } from "@/domain/tool";
 import { statusClass } from "@/lib/status";
 
@@ -11,6 +12,7 @@ import { statusClass } from "@/lib/status";
  */
 export function Brick({ sectionId, tool }: { sectionId: string; tool: ToolSummary }) {
   const router = useRouter();
+  const t = useTranslations("overview");
 
   function open() {
     router.push(`/section/${sectionId}/tool/${tool.id}/live`);
@@ -33,7 +35,7 @@ export function Brick({ sectionId, tool }: { sectionId: string; tool: ToolSummar
       <div className="text-[10px] opacity-85">
         {tool.type} · {tool.model}
       </div>
-      <div className="mb-auto font-mono text-[9px] opacity-90">{statLine(tool)}</div>
+      <div className="mb-auto font-mono text-[9px] opacity-90">{statLine(tool, t)}</div>
       <div className="text-[9px] font-bold tracking-[0.08em] opacity-95">{tool.status}</div>
       <div className="mt-[5px] flex flex-wrap gap-1">
         {tool.chambers.map((chamber) => (
@@ -53,11 +55,17 @@ export function Brick({ sectionId, tool }: { sectionId: string; tool: ToolSummar
  * brick 上那行 7 日統計文字。規則依 mockup 8 個實例反推（見報告「spec 沒涵蓋而你做的決定」）：
  * 有 MTBI 就顯示 alarm 數 + MTBI；沒有 MTBI 但有 note 且 alarm 數為 0（如「PM 中」）只顯示 note；
  * 其餘情況 alarm 數與 note（若有）並列顯示。
+ *
+ * note 本身來自 fixtures 資料（如「PM 中」），是資料內容不是 UI 文案，不搬進 messages；
+ * 搬的是「7日 alarm …」這類固定模板文字。
  */
-function statLine(tool: ToolSummary): string {
+function statLine(
+  tool: ToolSummary,
+  t: (key: string, values?: Record<string, string | number>) => string,
+): string {
   const { alarms7d, mtbiHours, note } = tool.stats;
-  if (mtbiHours !== null) return `7日 alarm ${alarms7d} · MTBI ${mtbiHours}h`;
+  if (mtbiHours !== null) return t("statAlarmMtbi", { count: alarms7d, hours: mtbiHours });
   if (note !== null && alarms7d === 0) return note;
-  if (note !== null) return `7日 alarm ${alarms7d} · ${note}`;
-  return `7日 alarm ${alarms7d}`;
+  if (note !== null) return t("statAlarmNote", { count: alarms7d, note });
+  return t("statAlarmOnly", { count: alarms7d });
 }

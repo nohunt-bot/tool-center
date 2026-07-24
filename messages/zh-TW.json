@@ -1,0 +1,53 @@
+{
+  "shell": {
+    "appName": "Tool Center",
+    "tagline": "Fab1 · 設備 AI 助理",
+    "sectionLabel": "課別",
+    "sectionMySuffix": "（我的課別）",
+    "sectionRestrictedSuffix": "（需支援權限）",
+    "sectionHint": "預設帶入所屬課別 · 開支援權限才能跨課",
+    "settingsButton": "⚙ 課別設定",
+    "localeLabel": "語言",
+    "localeZhTW": "繁體中文",
+    "localeEn": "English",
+    "viewLabel": "檢視",
+    "toolLabel": "機台",
+    "viewOverview": "🧱 機台一覽（全部）",
+    "viewLive": "🔴 當機處理",
+    "viewHistory": "📈 病史分析",
+    "viewDiagnosis": "🔬 深度診斷",
+    "overviewModeHint": "一覽模式：機台欄位停用 · 點 brick 直接進入",
+    "toolModeHint": "{mode} · {toolId}"
+  },
+  "panePlaceholder": {
+    "routeReady": "路由已建立，內容待 <styled>{phase}</styled> 實作",
+    "contextSuffix": " · context：{context}"
+  },
+  "overview": {
+    "header": "{sectionName} · {count} 台",
+    "emptyState": "{sectionName}（{sectionId}）目前無機台資料。",
+    "footerNote": "大格＝機台 · 小格＝chamber · 底色＝狀態（兩者可不同，色義一致）· 點 brick 直接進入",
+    "statAlarmOnly": "7日 alarm {count}",
+    "statAlarmMtbi": "7日 alarm {count} · MTBI {hours}h",
+    "statAlarmNote": "7日 alarm {count} · {note}"
+  },
+  "settingsPage": {
+    "title": "課別設定"
+  },
+  "toolPages": {
+    "liveTitle": "當機處理",
+    "historyTitle": "病史分析",
+    "diagnosisTitle": "深度診斷",
+    "fdcDemoLink": "📊 開 FDC 分析（驗證 intercepting route）"
+  },
+  "fdc": {
+    "heading": "{caseId} · AI 判讀",
+    "subtitle": "{toolId} · 近 90 天 · ML kernel 分析 · 目前分頁：{chart} chart",
+    "pending": "u chart 待 <a5>A5</a5> 實作 · t chart 待 <a6>A6</a6> 實作",
+    "variantLabelPrefix": "外框模式：",
+    "variantModalNote": "（從 pane 點開，底下頁面保持不動）",
+    "variantPageNote": "（直接開連結，完整頁面）",
+    "modalTitle": "FDC 分析",
+    "modalClose": "關閉"
+  }
+}
