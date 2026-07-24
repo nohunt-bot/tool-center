@@ -102,10 +102,11 @@ Status: active (2026-07-24)
 
 ### Stage A2 — 機台一覽（2 天）
 
-- [ ] A2.1 Brick 元件（機台 + chamber chips + 狀態 + 7 日統計）-> 六狀態快照測試
-- [ ] A2.2 Grid + 頂部統計（DOWN/LOST/PM 計數）+ legend -> 計數與資料源一致性測試
-- [ ] A2.3 點 brick 導向當機處理 + URL -> E2E
-- [ ] A2.4 空／載入／錯誤態
+- [x] A2.1 Brick 元件（機台 + chamber chips + 狀態 + 7 日統計，含鍵盤 Enter/Space）
+      -> 六狀態底色 class 測試 + 瀏覽器截圖確認大格/小格色義一致（TRK-B02：PM 機台下有 OFF chamber）
+- [x] A2.2 Grid + 頂部統計 + legend -> 計數由 tools 統計不寫死；測試斷言 DOWN 1 / LOST 2 / PM 1
+- [x] A2.3 點 brick 導向當機處理 -> 瀏覽器實測：點 SCN-A01 → `/section/LITHO-02/tool/SCN-A01/live`
+- [x] A2.4 空狀態（無機台顯示訊息不崩）-> 測試涵蓋。載入／錯誤態待 C2.1 統一元件化
 
 ### Stage A3 — 當機處理（5 天）
 
@@ -308,6 +309,12 @@ Status: active (2026-07-24)
   **test 122 passed**（+2 斷言：chronic status 不變量、pin→case referential integrity），
   並逐一 read-back 四個改動點對照 findings。A1.4 review→fix→re-verify 閉環完成。
   判斷（judgment.md）：4 行機械修正 + commander 為 fresh-vs-author context，不再另派 opus re-review。
+- 2026-07-24 | A2 | 機台一覽完成。派 sonnet 建元件，agent 因自身 session limit 中斷於寫測試前
+  （TRIPWIRE：subagent 額度耗盡，非程式錯誤；工作區未損，typecheck 仍 0）。
+  commander 接手補 `overview-pane.test.tsx` 並驗證。
+  typecheck 0 / lint 0 / **test 126 passed**（+4）。
+  瀏覽器實測：8 brick 全數 render、6 種狀態底色皆present、頂部計數 DOWN1/LOST2/PM1、
+  點 SCN-A01 導到 `/tool/SCN-A01/live`。截圖與 mockup L494–565 一致。
   **A1 已驗證部分：A1.1／A1.2／A1.3／A1.4／A1.8／A1.9。剩 A1.0（BLOCKED 缺 API sample）、
   A1.5 Server Actions／A1.6 demo 標示／A1.7 i18n／A1.10 角色切換器／A1.11 gating。**
 
