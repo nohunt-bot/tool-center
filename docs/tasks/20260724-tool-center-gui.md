@@ -90,8 +90,10 @@ Status: active (2026-07-24)
 - [~] A1.7 **i18n 骨架**：next-intl **4.13.4**（2026-07-23 發布，peer 支援 Next ^16）
       + `app/[locale]/` 路由 + 語系切換（保留路徑與 query）+ `en` 空訊息檔 + zh-TW deepMerge fallback
       + ESLint `no-restricted-syntax` 擋 JSX 硬寫中文（domain/data/test/urd 例外）
-      -> 作者自陳 typecheck 0 / lint 0 / test 126 / curl 各條通過。
-      **獨立驗收進行中（opus reviewer），未經驗收前不宣告完成。**
+      -> **獨立驗收（opus）：9 條驗收全過**，含 byte-level HTML diff 證明純重構（5 條 route 各只差
+      8–10 行，全部是新增的語系選單與 href 的 locale 前綴）、intercepting route 雙模式瀏覽器實測
+      （點開時底層 pane 為 `livePaneSameNode: true`，未 remount）、standalone build 實跑於 :3300。
+      **判定 FIX-FIRST**，6 項修復派工中（見下）。安全點 commit `3298d7b`。
 - [x] A1.8 **受控 taxonomy 定義表** -> 併入 A1.2（英文 code 為主鍵 + zh-TW 說明）。
       「=== 訊息檔鍵值」那一項待 A1.7 建 i18n 後補上
 - [x] A1.9 **`resolveRole` + 權限矩陣資料結構**（`lib/permission.ts`，`Record<Capability, Role[]>`）
