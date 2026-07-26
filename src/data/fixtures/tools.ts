@@ -1,19 +1,23 @@
-import type { Section, Tool, ToolAttributes, ToolSummary } from "@/domain/tool";
+import type { Tool, ToolAttributes, ToolSummary } from "@/domain/tool";
+import { LITHO02_CODE } from "@/data/fixtures/sections";
 
 /**
- * 黃光二課（LITHO-02）8 台機的一覽資料（mockup L494–565）。
+ * 黃光二課（課代碼 LITHO02_CODE，顯示名「黃光二課」／"LITHO-02"）8 台機的
+ * 一覽資料（mockup L494–565）。
  *
  * mockup 只給 SCN-A01 完整的機台屬性側欄（L641–654）；其餘機台一覽層
  * （brick + chamber + 7 日統計）齊全，屬性欄用同型機推得的合理最小值填，
  * 不是編出來的亂數（見 report「Open issues」）。
+ *
+ * R3：這裡原本還有一份 `sectionFixture`（單筆課別資料），跟
+ * `@/data/fixtures/sections` 的 `sectionsFixture` 是同一份資料的第三個副本，
+ * 已收斂掉——課別資料只在 sections.ts 那一份。
  */
-
-export const sectionFixture: Section = { id: "LITHO-02", name: "黃光二課" };
 
 const toolSummaries: readonly ToolSummary[] = [
   {
     id: "SCN-A01",
-    sectionId: "LITHO-02",
+    sectionId: LITHO02_CODE,
     type: "Scanner",
     model: "XT-1900i",
     status: "DOWN",
@@ -25,7 +29,7 @@ const toolSummaries: readonly ToolSummary[] = [
   },
   {
     id: "SCN-A02",
-    sectionId: "LITHO-02",
+    sectionId: LITHO02_CODE,
     type: "Scanner",
     model: "XT-1900i",
     status: "LOST",
@@ -37,7 +41,7 @@ const toolSummaries: readonly ToolSummary[] = [
   },
   {
     id: "SCN-A03",
-    sectionId: "LITHO-02",
+    sectionId: LITHO02_CODE,
     type: "Scanner",
     model: "XT-1900i",
     status: "UP",
@@ -49,7 +53,7 @@ const toolSummaries: readonly ToolSummary[] = [
   },
   {
     id: "TRK-B01",
-    sectionId: "LITHO-02",
+    sectionId: LITHO02_CODE,
     type: "Track",
     model: "ACT12",
     status: "UP",
@@ -63,7 +67,7 @@ const toolSummaries: readonly ToolSummary[] = [
   },
   {
     id: "TRK-B02",
-    sectionId: "LITHO-02",
+    sectionId: LITHO02_CODE,
     type: "Track",
     model: "ACT12",
     status: "PM",
@@ -77,7 +81,7 @@ const toolSummaries: readonly ToolSummary[] = [
   },
   {
     id: "TRK-B03",
-    sectionId: "LITHO-02",
+    sectionId: LITHO02_CODE,
     type: "Track",
     model: "ACT12",
     status: "LOST",
@@ -89,7 +93,7 @@ const toolSummaries: readonly ToolSummary[] = [
   },
   {
     id: "OVL-C01",
-    sectionId: "LITHO-02",
+    sectionId: LITHO02_CODE,
     type: "Overlay",
     model: "KLA Archer",
     status: "WEQ",
@@ -98,7 +102,7 @@ const toolSummaries: readonly ToolSummary[] = [
   },
   {
     id: "CD-C02",
-    sectionId: "LITHO-02",
+    sectionId: LITHO02_CODE,
     type: "CD-SEM",
     model: "CG5000",
     status: "OFF",

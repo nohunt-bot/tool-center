@@ -1,4 +1,5 @@
 import type { DataSource, DataSourceMeta } from "@/data/types";
+import { resolveSectionCode } from "@/data/section-ref";
 import {
   chronicFlagsFixture,
   errorCasesFixture,
@@ -8,10 +9,13 @@ import {
 } from "@/data/fixtures/cases";
 import { uChartAnalysisFixture, tChartAnalysisFixture } from "@/data/fixtures/fdc";
 import { graphQueryResultFixture } from "@/data/fixtures/graph";
+import { LITHO02_CODE, sectionsFixture } from "@/data/fixtures/sections";
 import { sectionSettingsFixture } from "@/data/fixtures/settings";
 import { crossDiagnosisFixture, spatialAnalysesFixture } from "@/data/fixtures/spatial";
 import { getToolFixture, listToolSummariesFixture } from "@/data/fixtures/tools";
-import { currentUserFixture, grantsFixture, sectionsFixture } from "@/data/fixtures/users";
+import { currentUserFixture, grantsFixture } from "@/data/fixtures/users";
+
+export { sectionsFixture } from "@/data/fixtures/sections";
 
 /**
  * Stage A 的 DataSource 實作：全部資料來自 mockup（urd/tool-center-gui.html）整理出的
@@ -21,20 +25,40 @@ import { currentUserFixture, grantsFixture, sectionsFixture } from "@/data/fixtu
  */
 export const fixturesDataSource: DataSource = {
   getCurrentUser() {
-    return Promise.resolve(currentUserFixture);
+    // R2 正規化點：使用者記錄裡的課別參照 → 課代碼，只在這裡（DataSource
+    // 邊界）做一次。這批 fixtures 的 currentUserFixture 本來就直接存代碼，
+    // 所以下面全部走 resolveSectionCode() 的直通分支，行為不變——但位置與
+    // 轉換時機先立好，Stage B 接真實 API 時，不管上游回的是課代碼還是課名，
+    // 轉換都發生在這一行，不會擴散到元件或頁面裡。見 @/data/section-ref。
+    return Promise.resolve({
+      ...currentUserFixture,
+      sectionId: resolveSectionCode(currentUserFixture.sectionId, sectionsFixture),
+      managerOf: currentUserFixture.managerOf.map((ref) => resolveSectionCode(ref, sectionsFixture)),
+      supportSections: currentUserFixture.supportSections.map((ref) =>
+        resolveSectionCode(ref, sectionsFixture),
+      ),
+    });
   },
   listSections() {
     return Promise.resolve(sectionsFixture);
   },
-  listGrants(sectionId) {
-    return Promise.resolve(grantsFixture.filter((grant) => grant.sectionId === sectionId));
+  listGrants(sectionCode) {
+    // M2：跟 getCurrentUser() 一樣在 DataSource 邊界做正規化。section-ref.ts
+    // 的 docstring 本來就把 Grant.sectionId 列進適用範圍，這裡補上實作，
+    // 不然 Stage B 若上游 grant 回課名，這個 filter 會靜默回傳空陣列——
+    // 使用者的支援授權無聲消失（權限降級，卻不報錯），比丟例外更危險。
+    return Promise.resolve(
+      grantsFixture.filter(
+        (grant) => resolveSectionCode(grant.sectionId, sectionsFixture) === sectionCode,
+      ),
+    );
   },
 
-  listTools(sectionId) {
-    return Promise.resolve(listToolSummariesFixture(sectionId));
+  listTools(sectionCode) {
+    return Promise.resolve(listToolSummariesFixture(sectionCode));
   },
-  getTool(sectionId, toolId) {
-    return Promise.resolve(getToolFixture(sectionId, toolId));
+  getTool(sectionCode, toolId) {
+    return Promise.resolve(getToolFixture(sectionCode, toolId));
   },
 
   listToolCommands(toolId) {
@@ -102,9 +126,9 @@ export const fixturesDataSource: DataSource = {
     return Promise.resolve(graphQueryResultFixture);
   },
 
-  getSectionSettings(sectionId) {
-    if (sectionId !== "LITHO-02") {
-      return Promise.reject(new Error(`fixtures: no section settings for "${sectionId}"`));
+  getSectionSettings(sectionCode) {
+    if (sectionCode !== LITHO02_CODE) {
+      return Promise.reject(new Error(`fixtures: no section settings for "${sectionCode}"`));
     }
     return Promise.resolve(sectionSettingsFixture);
   },

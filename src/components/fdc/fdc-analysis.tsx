@@ -1,6 +1,4 @@
-"use client";
-
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
 /**
  * FDC 分析內容。同一份內容有兩種外框：
@@ -8,8 +6,11 @@ import { useTranslations } from "next-intl";
  *   variant="modal" 從 pane 點開（intercepting route 的覆蓋層）
  *
  * 內容本體待 A5（u chart）／A6（t chart）實作。
+ *
+ * Server Component（F4）：沒有互動、沒有瀏覽器 API，先前掛的 client 指令只是為了
+ * 測試方便，但這個檔案本來就沒有測試——沒有理由把它硬推去 client bundle。
  */
-export function FdcAnalysis({
+export async function FdcAnalysis({
   toolId,
   caseId,
   chart,
@@ -20,7 +21,7 @@ export function FdcAnalysis({
   chart: "u" | "t";
   variant: "page" | "modal";
 }) {
-  const t = useTranslations("fdc");
+  const t = await getTranslations("fdc");
 
   return (
     <div>

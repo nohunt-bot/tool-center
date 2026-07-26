@@ -59,12 +59,11 @@ export function Brick({ sectionId, tool }: { sectionId: string; tool: ToolSummar
  * note 本身來自 fixtures 資料（如「PM 中」），是資料內容不是 UI 文案，不搬進 messages；
  * 搬的是「7日 alarm …」這類固定模板文字。
  */
-function statLine(
-  tool: ToolSummary,
-  t: (key: string, values?: Record<string, string | number>) => string,
-): string {
+function statLine(tool: ToolSummary, t: ReturnType<typeof useTranslations<"overview">>): string {
   const { alarms7d, mtbiHours, note } = tool.stats;
-  if (mtbiHours !== null) return t("statAlarmMtbi", { count: alarms7d, hours: mtbiHours });
+  if (mtbiHours !== null) {
+    return t("statAlarmMtbi", { count: alarms7d, hours: mtbiHours });
+  }
   if (note !== null && alarms7d === 0) return note;
   if (note !== null) return t("statAlarmNote", { count: alarms7d, note });
   return t("statAlarmOnly", { count: alarms7d });

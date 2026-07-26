@@ -54,7 +54,25 @@ export const toolSummarySchema = toolSchema.omit({ attributes: true });
 export type ToolSummary = z.infer<typeof toolSummarySchema>;
 
 export const sectionSchema = z.object({
-  id: sectionIdSchema,
-  name: z.string().min(1),
+  /** 課代碼——唯一識別，用於 URL 與權限鍵（見 domain/user 的 SectionId）。 */
+  code: sectionIdSchema,
+  /** 英文課名（如 "LITHO-02"）。純顯示欄位，唯一性未確認，不可用於查詢。 */
+  nameEn: z.string().min(1),
+  /** 中文課名（如「黃光二課」）。純顯示欄位。 */
+  nameZh: z.string().min(1),
 });
 export type Section = z.infer<typeof sectionSchema>;
+
+/**
+ * 課別顯示名稱：依 locale 選 nameZh 或 nameEn（R5，顯示層最小改動）。
+ *
+ * 這是「資料」在地化（哪個名字給哪個 locale 看），跟 messages/ 的 UI 文案
+ * 在地化是兩套機制，不要混在一起。
+ *
+ * User.locale 欄位是之後才會做的事（這一波還沒有 locale 來源）：呼叫端自己
+ * 用現有管道拿到目前語系（例如 next-intl 的 useLocale()／getLocale()）再傳進來，
+ * 這個函式本身不去挖 locale 從哪來。
+ */
+export function sectionDisplayName(section: Section, locale: string): string {
+  return locale === "zh-TW" ? section.nameZh : section.nameEn;
+}

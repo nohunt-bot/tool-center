@@ -5,6 +5,8 @@ import type { Grant, Role, SectionId, User } from "@/domain/user";
  *
  * 三條紀律：
  * 1. 任何權限檢查都要帶 sectionId——不帶的就是 bug。
+ *    sectionId 是課代碼（英數字串），不是課名；拿課名（如「黃光二課」
+ *    「LITHO-02」）比對是 bug，課名會被改、可能重複、有全形半形問題。
  * 2. 矩陣是資料結構，不是散落在元件裡的 if-else。
  * 3. 前端 gating 只是 UX；每個寫入端點都要在 server 端再驗一次（B1.3）。
  */

@@ -1,6 +1,4 @@
-"use client";
-
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
 /**
  * A0 的路由骨架佔位元件。每個 pane 被實作時就從對應頁面移除。
@@ -8,10 +6,13 @@ import { useTranslations } from "next-intl";
  * 空白頁看不出路由對不對。
  *
  * title 由呼叫端（各 page.tsx）用 getTranslations 翻好再傳進來；
- * 這裡的固定模板文字（「路由已建立…」）自己用 useTranslations，
+ * 這裡的固定模板文字（「路由已建立…」）自己用 getTranslations，
  * phase 要套 teal 樣式所以用 t.rich() 而不是 t()。
+ *
+ * Server Component（F4）：沒有互動、沒有瀏覽器 API，先前掛的 client 指令只是為了
+ * 測試方便，但這個檔案本來就沒有測試——沒有理由把它硬推去 client bundle。
  */
-export function PanePlaceholder({
+export async function PanePlaceholder({
   title,
   phase,
   context,
@@ -20,7 +21,7 @@ export function PanePlaceholder({
   phase: string;
   context?: string;
 }) {
-  const t = useTranslations("panePlaceholder");
+  const t = await getTranslations("panePlaceholder");
   return (
     <div className="h-full overflow-y-auto px-5 py-4">
       <div className="rounded-[10px] border border-dashed border-line bg-panel px-4 py-3">

@@ -12,12 +12,13 @@
     "localeEn": "English",
     "viewLabel": "檢視",
     "toolLabel": "機台",
-    "viewOverview": "🧱 機台一覽（全部）",
-    "viewLive": "🔴 當機處理",
-    "viewHistory": "📈 病史分析",
-    "viewDiagnosis": "🔬 深度診斷",
+    "viewOverview": "機台一覽（全部）",
+    "viewLive": "當機處理",
+    "viewHistory": "病史分析",
+    "viewDiagnosis": "深度診斷",
     "overviewModeHint": "一覽模式：機台欄位停用 · 點 brick 直接進入",
-    "toolModeHint": "{mode} · {toolId}"
+    "toolModeHint": "{mode} · {toolId}",
+    "toolOptionLabel": "{toolId} · {type}（{status}）"
   },
   "panePlaceholder": {
     "routeReady": "路由已建立，內容待 <styled>{phase}</styled> 實作",

@@ -9,6 +9,15 @@ export const ROLES = ["admin", "editor", "viewer"] as const;
 export const roleSchema = z.enum(ROLES);
 export type Role = z.infer<typeof roleSchema>;
 
+/**
+ * 課代碼（英數字串），不是課名。
+ *
+ * 課別的「名稱」（`Section.nameEn`／`Section.nameZh`）會被改、可能重複、
+ * 有全形半形問題，不能拿來當識別碼——凡是 SectionId 型別的值都必須是課代碼，
+ * 拿課名（如「黃光二課」「LITHO-02」）塞進來比對是 bug。型別本身仍是
+ * `string`（沒有另開 branded type），這條規則靠註解與 review 把關，不是型別
+ * 系統強制的。
+ */
 export const sectionIdSchema = z.string().min(1);
 export type SectionId = z.infer<typeof sectionIdSchema>;
 

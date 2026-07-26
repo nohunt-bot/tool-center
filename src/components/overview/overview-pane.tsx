@@ -1,6 +1,4 @@
-"use client";
-
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import type { ToolSummary } from "@/domain/tool";
 import { statusToken, TOOL_STATUSES, type ToolStatus } from "@/lib/status";
 import { Brick } from "@/components/overview/brick";
@@ -11,8 +9,12 @@ const CALLOUT_STATUSES = ["DOWN", "LOST", "PM"] as const;
 /**
  * 機台一覽 pane（mockup L494–565）：頂部標題列 + legend + brick grid + 底部說明。
  * 資料來自 FixturesDataSource.listTools()，計數一律由 tools 統計，不寫死。
+ *
+ * Server Component（F4）：這裡不需要任何互動狀態或瀏覽器 API，先前掛的 client
+ * 指令只是之前為了測試方便加上的，實際只省 4,181 B（0.6%）。改回 async function +
+ * getTranslations，子層的 Brick 才是真的需要 client（點擊/鍵盤導覽）。
  */
-export function OverviewPane({
+export async function OverviewPane({
   sectionId,
   sectionName,
   tools,
@@ -21,7 +23,7 @@ export function OverviewPane({
   sectionName: string;
   tools: readonly ToolSummary[];
 }) {
-  const t = useTranslations("overview");
+  const t = await getTranslations("overview");
 
   if (tools.length === 0) {
     return (

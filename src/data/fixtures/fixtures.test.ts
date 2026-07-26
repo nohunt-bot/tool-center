@@ -23,9 +23,10 @@ import { CHRONIC_DEFINITION } from "@/domain/taxonomy";
 import { crossDiagnosisSchema, spatialAnalysisSchema } from "@/domain/spatial";
 import { crossDiagnosisFixture, spatialAnalysesFixture } from "@/data/fixtures/spatial";
 import { sectionSchema, toolSchema, toolSummarySchema } from "@/domain/tool";
-import { getToolFixture, listToolSummariesFixture, sectionFixture } from "@/data/fixtures/tools";
+import { LITHO02_CODE, sectionsFixture } from "@/data/fixtures/sections";
+import { getToolFixture, listToolSummariesFixture } from "@/data/fixtures/tools";
 import { grantSchema, userSchema } from "@/domain/user";
-import { currentUserFixture, grantsFixture, sectionsFixture } from "@/data/fixtures/users";
+import { currentUserFixture, grantsFixture } from "@/data/fixtures/users";
 
 /**
  * 這個測試就是「fixtures 真的符合型別」的證明——
@@ -48,10 +49,19 @@ describe("fixtures：使用者與課別", () => {
     expect(() => userSchema.parse(currentUserFixture)).not.toThrow();
   });
 
+  // R3：課別 fixture 收斂成 @/data/fixtures/sections 的唯一一份之後，這裡補上
+  // 原本缺的 .parse() 逐筆驗證（K3）——收斂之前有兩份（nav.ts／users.ts）
+  // 各自需要手動同步的重複，現在只剩一份，不需要「兩份同步」測試。
   it("sectionsFixture 每一筆都符合 sectionSchema", () => {
+    expect(sectionsFixture.length).toBeGreaterThan(0);
     for (const section of sectionsFixture) {
       expect(() => sectionSchema.parse(section)).not.toThrow();
     }
+  });
+
+  it("sectionsFixture 的 code 各自唯一（課代碼是識別碼，不能重複）", () => {
+    const codes = sectionsFixture.map((section) => section.code);
+    expect(new Set(codes).size).toBe(codes.length);
   });
 
   it("grantsFixture 每一筆都符合 grantSchema", () => {
@@ -62,12 +72,8 @@ describe("fixtures：使用者與課別", () => {
 });
 
 describe("fixtures：機台", () => {
-  it("sectionFixture 符合 sectionSchema", () => {
-    expect(() => sectionSchema.parse(sectionFixture)).not.toThrow();
-  });
-
-  it("LITHO-02 的 8 台機一覽資料都符合 toolSummarySchema", () => {
-    const summaries = listToolSummariesFixture("LITHO-02");
+  it("黃光二課（LITHO02_CODE）的 8 台機一覽資料都符合 toolSummarySchema", () => {
+    const summaries = listToolSummariesFixture(LITHO02_CODE);
     expect(summaries).toHaveLength(8);
     for (const summary of summaries) {
       expect(() => toolSummarySchema.parse(summary)).not.toThrow();
@@ -76,13 +82,13 @@ describe("fixtures：機台", () => {
 
   it("每台已知機台的完整資料都符合 toolSchema", () => {
     for (const toolId of KNOWN_TOOL_IDS) {
-      const tool = getToolFixture("LITHO-02", toolId);
+      const tool = getToolFixture(LITHO02_CODE, toolId);
       expect(() => toolSchema.parse(tool)).not.toThrow();
     }
   });
 
   it("未知機台 id 丟明確錯誤", () => {
-    expect(() => getToolFixture("LITHO-02", "NO-SUCH-TOOL")).toThrow();
+    expect(() => getToolFixture(LITHO02_CODE, "NO-SUCH-TOOL")).toThrow();
   });
 });
 

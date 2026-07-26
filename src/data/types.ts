@@ -13,19 +13,26 @@ import type { Grant, SectionId, User } from "@/domain/user";
  * **feature 層一行都不用改**。這條線斷了，Stage A 就是拋棄式工作（task D2）。
  *
  * 兩個設計約束：
- * 1. 每個查詢都帶 sectionId——權限判定不帶 section 就是 bug（permission-matrix）。
+ * 1. 每個查詢都帶課別識別碼——權限判定不帶 section 就是 bug（permission-matrix）。
  * 2. 回傳值一律是已驗證過 schema 的 domain 型別，不是原始 API 回應。
  *    型別轉換（既有 API 的形狀 → domain 型別）屬於 upstream 實作的責任。
+ *
+ * 命名選擇（R2）：這裡凡是課別參數一律叫 `sectionCode`，不叫 `sectionId`。
+ * `SectionId`（domain/user.ts）這個型別名稱是既有命名，不在這波改動範圍內，
+ * 但 `DataSource` 是 fixtures／upstream 共用的邊界契約，往內一律只有課代碼
+ * （不是課名）這件事，值得在契約本身的參數名上直接說出來，不只是靠註解——
+ * 呼叫端看到 `sectionCode: SectionId` 就知道要傳代碼、不是課名，不用回頭查
+ * SectionId 的 JSDoc。全檔一致：下面四個方法都用這個名字。
  */
 export type DataSource = {
   // ── 使用者與權限 ──────────────────────────────────────────
   getCurrentUser(): Promise<User>;
   listSections(): Promise<readonly Section[]>;
-  listGrants(sectionId: SectionId): Promise<readonly Grant[]>;
+  listGrants(sectionCode: SectionId): Promise<readonly Grant[]>;
 
   // ── 機台 ──────────────────────────────────────────────────
-  listTools(sectionId: SectionId): Promise<readonly ToolSummary[]>;
-  getTool(sectionId: SectionId, toolId: string): Promise<Tool>;
+  listTools(sectionCode: SectionId): Promise<readonly ToolSummary[]>;
+  getTool(sectionCode: SectionId, toolId: string): Promise<Tool>;
 
   // ── 當機處理 ──────────────────────────────────────────────
   listToolCommands(toolId: string): Promise<readonly ToolCommand[]>;
@@ -58,7 +65,7 @@ export type DataSource = {
   queryGraph(toolId: string, symptom: string): Promise<GraphQueryResult>;
 
   // ── 課別設定 ──────────────────────────────────────────────
-  getSectionSettings(sectionId: SectionId): Promise<SectionSettings>;
+  getSectionSettings(sectionCode: SectionId): Promise<SectionSettings>;
 };
 
 /** Stage A 的實作是否為假資料——用於畫面上的誠實標示（A1.6） */

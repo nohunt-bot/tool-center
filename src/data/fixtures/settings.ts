@@ -1,8 +1,9 @@
 import type { SectionSettings } from "@/domain/settings";
+import { LITHO02_CODE } from "@/data/fixtures/sections";
 
-/** 課別設定：黃光二課 LITHO-02（mockup L1298–1364） */
+/** 課別設定：黃光二課／LITHO-02（課代碼 LITHO02_CODE，mockup L1298–1364） */
 export const sectionSettingsFixture: SectionSettings = {
-  sectionId: "LITHO-02",
+  sectionId: LITHO02_CODE,
   dos:
     "- 引用 SOP 編號回答\n" +
     "- 不確定時優先建議找 PE\n" +
