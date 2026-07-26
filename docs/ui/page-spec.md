@@ -21,7 +21,7 @@ Status: draft (2026-07-25)
 
 ---
 
-## 1. 機台一覽（`/[locale]/section/[sid]`，A2，已實作）
+## 1. 機台一覽（`/section/<code>`，A2，已實作）
 
 mockup 行號區間：L494–567（`<div class="pane" id="pane-overview">` 至其對應
 `</div>`，已用 `sed -n '490,570p'` 核對起訖）。
@@ -36,8 +36,11 @@ TwoColumnLayout 或側欄：內容單一且扁平。
 ### 1.2 版面結構
 
 - 單欄，由上而下：
-  1. 標題列：課別名稱＋機台數＋（若 DOWN/LOST/PM 任一計數 > 0）以 `StatusDot` + 文字
-     標出這幾個要特別注意的狀態計數
+  1. 標題列：課別顯示名稱＋機台數＋（若 DOWN/LOST/PM 任一計數 > 0）以 `StatusDot` + 文字
+     標出這幾個要特別注意的狀態計數。**顯示名稱依 `User.locale` 二選一**：
+     `zh-TW` 顯示 `Section.nameZh`、`en` 顯示 `Section.nameEn`（如 `LITHO-02`）——
+     這是**資料**的在地化，與 `messages/` 的 UI 文案在地化是兩套機制（見 §8 i18n）。
+     識別（URL 段、權限鍵）一律用 `Section.code`，不是顯示名稱。
   2. Legend：`StatusDot` × 6（全部 `ToolStatus`），純文字對照，不可互動
   3. Brick grid：`Brick`（既有元件，import 名為 `Brick`，本文件依 component-spec §3.3
      的建議統一稱呼）以 auto-fill grid 排列，一格一台機台
@@ -56,11 +59,18 @@ TwoColumnLayout 或側欄：內容單一且扁平。
 ### 1.3 資料需求
 
 - `listTools(sectionId)` —— 唯一的資料來源，回傳 `ToolSummary[]`，畫面上的計數
-  （DOWN/LOST/PM…）全部由這份陣列即時統計，不寫死任何數字。
-- 無需 `getCurrentUser()`：本頁沒有任何依角色分支的內容（`view.panes` 是 `ALL`），
-  Header/ControlBar 的課別選單才需要使用者的 `supportSections`，但那屬於 shell 層
-  不屬於本頁。
-- 沒有需要平行取的多筆資料——只有一次呼叫。
+  （DOWN/LOST/PM…）全部由這份陣列即時統計，不寫死任何數字。這裡的 `sectionId`
+  語意是 `Section.code`（URL 段 `/section/<code>` 解出來的值），不是課名——
+  先前把 `nameEn`（如 `LITHO-02`）當識別碼是錯的（見
+  `docs/decisions/0002-route-and-locale.md`）。
+- 標題列的課別顯示名稱需要 `Section.nameZh`/`nameEn` 其中一個（依
+  `getCurrentUser().locale` 選）；名稱↔代碼的轉換只在 `DataSource` 邊界做一次，
+  沿用既有 `listSections()`，本頁不需要新方法，也不自己做轉換。
+- 無需 `getCurrentUser()` 判斷角色差異：本頁沒有任何依角色分支的內容
+  （`view.panes` 是 `ALL`）；但仍需要 `getCurrentUser().locale` 來決定課別顯示名稱
+  ——這不是權限分支，是資料在地化。Header/ControlBar 的課別選單才需要使用者的
+  `supportSections`，但那屬於 shell 層不屬於本頁。
+- 沒有需要平行取的多筆資料——`listTools`／`listSections` 互不依賴，可平行取。
 
 ### 1.4 狀態
 
@@ -86,8 +96,11 @@ TwoColumnLayout 或側欄：內容單一且扁平。
 
 ### 1.6 互動與導航
 
-- 點擊（或鍵盤 Enter/Space）`Brick` → `router.push('/section/{sectionId}/tool/{toolId}/live')`，
-  進 URL（既有實作已驗證）。
+- 點擊（或鍵盤 Enter/Space）`Brick` → `router.push('/tool/{toolId}')`，
+  進 URL（**路徑已隨 `docs/decisions/0002-route-and-locale.md` 改為方案 C：
+  機台子樹不帶課別段，當機處理是 `/tool/{toolId}` 本身、不再有 `/live` 這一段**；
+  既有實作驗證的是舊路徑 `/section/{sectionId}/tool/{toolId}/live`，R5／R6 落地後
+  需重新以此節為準驗證）。
 - 無其他互動；Legend 與計數皆不可點擊。
 - 課別/語系切換屬於 shell 層（`Header`），不在本頁 spec 範圍。
 
@@ -103,9 +116,13 @@ D1 編號項目，此處誠實區分。
 
 1. `listTools()` 回傳的 `ToolSummary[]` 中各 `ToolStatus` 計數與畫面標題列/Legend
    顯示的數字逐一相符（可用 fixtures 斷言，既有測試已涵蓋 DOWN 1 / LOST 2 / PM 1）。
-2. 點擊任一 `Brick` 後，瀏覽器網址列變為 `/section/{sid}/tool/{tool.id}/live`。
+2. 點擊任一 `Brick` 後，瀏覽器網址列變為 `/tool/{tool.id}`（新路徑，見
+   `docs/decisions/0002-route-and-locale.md`；舊路徑
+   `/section/{sid}/tool/{tool.id}/live` 為 R5 前的既有實作現況，R5 落地後本條
+   驗收以新路徑為準）。
 3. 鍵盤 Tab 到某個 `Brick` 後按 Enter 或 Space，觸發與滑鼠點擊相同的導覽。
-4. `tools` 為空陣列時顯示「{sectionName}（{sectionId}）目前無機台資料」而不拋錯。
+4. `tools` 為空陣列時顯示「{課別顯示名稱}（{code}）目前無機台資料」而不拋錯——
+   顯示名稱依 locale 選 `nameZh`/`nameEn`，括號內的識別一律是 `code`。
 5. 六種 `ToolStatus` 的底色兩兩不同（既有 `status.test.ts` 已涵蓋）。
 
 ### 1.9 與 spec 的落差（現況 vs 本規格）
@@ -125,7 +142,7 @@ D1 編號項目，此處誠實區分。
 
 ---
 
-## 2. 當機處理（`/[locale]/section/[sid]/tool/[tid]/live`，A3）
+## 2. 當機處理（`/tool/<tid>`，A3）
 
 mockup 行號區間：L569–667（`<div class="pane" id="pane-live">` 至其對應
 `</div>`，已用 `sed -n '565,670p'` 核對起訖；五個 `.zone` 開頭分別在
@@ -182,13 +199,19 @@ Tool Command／Error Case／檔案清單本身就是最原始的事實層）。
 ### 2.3 資料需求
 
 - `getTool(sectionId, toolId)` —— 取得 `Tool`（含 `attributes`／`status`／`chambers`），
-  side 欄「機台屬性」與標題需要。
+  side 欄「機台屬性」與標題需要。**`sectionId` 不再從 URL 段取得**——本頁路由是
+  `/tool/<tid>`，機台子樹不帶課別段（見
+  `docs/decisions/0002-route-and-locale.md`），`sectionId`（語意是
+  `Section.code`）改由 `toolId` 反查所屬課別取得；`getTool` 是否因此改為只吃
+  `toolId` 單一參數屬 R1–R4 的實作細節，本規格不預先定死簽名，只確認「URL 不再
+  提供 sectionId」這個介面事實。
 - `listToolCommands(toolId)`
 - `listErrorCases(toolId)`
 - `listChronicFlags(toolId)`（rule base，零 LLM，D1 #2）
 - `listToolFiles(toolId)`
 
-以上 5 個呼叫**互不依賴**，皆只需要 `toolId`／`sectionId`，可以全部 `Promise.all`
+以上 5 個呼叫**互不依賴**，皆只需要 `toolId`（`sectionId` 如仍需要則由
+`toolId` 反查取得，不是頁面從 URL 直接拿），可以全部 `Promise.all`
 平行取（不像深度診斷頁那樣需要先知道使用者選了哪個 tab 才能決定查什麼）。
 
 ### 2.4 狀態
@@ -228,8 +251,9 @@ Tool Command／Error Case／檔案清單本身就是最原始的事實層）。
 ### 2.6 互動與導航
 
 - `ErrorCaseRow` 的「📊 u chart」「📉 t chart」按鈕 → 導向
-  `/section/{sid}/tool/{tid}/fdc/{caseId}?chart=u|t`（intercepting route，
-  URL 改變，底層本頁維持掛載）。
+  `/tool/{tid}/fdc/{caseId}?chart=u|t`（新路徑，機台子樹不帶課別段；intercepting
+  route 攔截器改在 `tool/[tid]/` 底下，見
+  `docs/decisions/0002-route-and-locale.md`／R8），URL 改變，底層本頁維持掛載。
 - `ErrorCaseRow`「手動判讀」按鈕、`ChronicBadge`、`AskChip` → 觸發開啟 Copilot
   Drawer 並帶入固定問句（`onAsk(question)`），**不改變 URL**（Copilot 開關是
   跨頁浮層的 ephemeral 狀態，見 §8）。
@@ -263,7 +287,7 @@ Tool Command／Error Case／檔案清單本身就是最原始的事實層）。
 
 ---
 
-## 3. 病史分析（`/[locale]/section/[sid]/tool/[tid]/history`，A4）
+## 3. 病史分析（`/tool/<tid>/history`，A4）
 
 mockup 行號區間：L669–705（`<div class="pane" id="pane-hist">` 至其對應
 `</div>`，已用 `sed -n '665,710p'` 核對起訖）。
@@ -380,7 +404,7 @@ mockup 行號區間：L669–705（`<div class="pane" id="pane-hist">` 至其對
 
 ---
 
-## 4. 深度診斷（`/[locale]/section/[sid]/tool/[tid]/diagnosis`，A7+A8）
+## 4. 深度診斷（`/tool/<tid>/diagnosis`，A7+A8）
 
 mockup 行號區間：L707–1293（`<div class="pane" id="pane-diag">` 至其對應
 `</div>`，已用 `sed -n '703,1295p'` 核對起訖；五個 dd-view 的 `.verdict`
@@ -628,7 +652,7 @@ viewer 在本頁的模式與當機處理一致：**候選零件本身仍可見**
 
 ---
 
-## 5. 課別設定（`/[locale]/section/[sid]/settings`，A9）
+## 5. 課別設定（`/section/<code>/settings`，A9）
 
 mockup 行號區間：L1295–1367（`<div class="pane" id="pane-settings">` 至其對應
 `</div>`）。依縮排層級判定：L1295 `<div class="pane" id="pane-settings">`
@@ -643,6 +667,14 @@ L1366 `</div>`（4 空格）先收合內層 `.settings`，L1367 `</div>`（2 空
 MCP 工具白名單勾選、專家標籤、KM domain 來源、以及授予/撤銷課外人員的臨時
 editor 權限。editor／viewer 進入本頁是**唯讀檢視**（permission-matrix #16：
 「進入設定頁：admin ✓／editor 唯讀／viewer 唯讀」）。
+
+**語系設定不在本頁**。本頁管的是**課別資產**——admin 專屬寫入、editor/viewer
+唯讀，這個權限模型的前提是「這是課的東西，不是個人的東西」。語系
+（`User.locale`）是**個人偏好**，不是課別資產：它是使用者範圍而非課別範圍
+（見 `docs/decisions/0002-route-and-locale.md`），每個角色（admin／editor／
+viewer）都要能改自己的語系，不受本頁的唯讀限制約束——因此語系切換介面
+不應該放進課別設定頁，該長在哪裡（Header 下拉／獨立 `/me` 頁）尚未定案，
+見 §9 Open issues。
 
 ### 5.2 版面結構
 
@@ -689,9 +721,15 @@ editor 權限。editor／viewer 進入本頁是**唯讀檢視**（permission-mat
 
 - `getSectionSettings(sectionId)` —— 回傳 `SectionSettings`（含 `dos`／`mcpTools`／
   `expertTags`／`kmSources`），本頁四個 `Zone`（DOs／MCP／專家標籤／KM 來源）
-  共用這一次查詢。
+  共用這一次查詢。這裡的 `sectionId` 語意是 `Section.code`（URL 段
+  `/section/<code>/settings` 解出來的值），不是課名（見
+  `docs/decisions/0002-route-and-locale.md`）。
 - `listGrants(sectionId)` —— 課內權限授予列表需要，與 `getSectionSettings`
   互不依賴，可平行取。
+- 頁面標題/breadcrumb 顯示課別名稱時，與 §1 同一套規則：依
+  `getCurrentUser().locale` 選 `Section.nameZh`/`nameEn`，識別（URL 段、
+  `grant.sectionId` 等權限鍵）一律用 `code`；轉換只在 `DataSource` 邊界做一次
+  （`listSections()`），本頁不自己轉換。
 - **Open issue**：新增 grant 需要「選擇要授權給誰」，但 `DataSource` 只有
   `getCurrentUser()`，**沒有**任何「列出/搜尋使用者」的方法——這是本頁最明確的
   介面缺口，回饋到 §9 的 Open issues。
@@ -782,7 +820,7 @@ admin+editor）與 `ADMIN_ONLY`（其餘五項）**四種**角色範圍的畫面
 
 ---
 
-## 6. FDC 分析視窗（u chart + t chart）（`.../fdc/[caseId]`，modal + page 雙模式，A5+A6）
+## 6. FDC 分析視窗（u chart + t chart）（`/tool/<tid>/fdc/<caseId>`，modal + page 雙模式，A5+A6）
 
 mockup 行號區間：L1371–1709（`<div class="fdc-overlay" id="fdcOverlay">` 至
 L1695 收合，加上共用的 `<div class="case-modal" id="caseModal">`
@@ -1083,18 +1121,33 @@ checkbox 是 disable 而非隱藏，因為使用者需要知道「有沒有被�
 
 ## 8. 跨頁面共通規則
 
-**導航模型（什麼進 URL）**：
+**導航模型（什麼進 URL）**——本節依
+`docs/decisions/0002-route-and-locale.md` 全面改寫，取代舊版判準：
 
-- 進 URL：locale、`sectionId`、`toolId`、檢視模式（`live`/`history`/`diagnosis`）、
+- 進 URL：`sectionId`（即 `Section.code`，僅出現在 `/section/<code>` 與
+  `/section/<code>/settings`，機台子樹不帶這一段）、`toolId`、檢視模式
+  （`history`/`diagnosis`；當機處理是 `/tool/<tid>` 本身，不是獨立的檢視模式段）、
   FDC `caseId` + `chart`（u/t）、深度診斷的 `indicator` 與關聯圖子分頁
   （建議 query string，本文件在 §4.6 首次提出此建議，task 檔本身只說
   「URL 同步」未給出精確 query key，屬於本規格的補充判斷）。
-- **不進 URL**：Copilot 的開關狀態與訊息串（跨頁浮層，ephemeral，reload 重置為
-  關閉）、`FdcFeedbackPanel` 的狀態機、Role 切換器（demo 用，A1.10——**特別注意**
-  不應該做成 URL query，否則分享連結會意外把自己的角色帶給別人，應該用
-  cookie/localStorage 之類的本機狀態）。
-- 這個「進/不進 URL」的分野原則：**可分享、需要 reload 後還原的狀態才進 URL**；
-  純粹的互動輔助狀態（浮層開關、表單草稿）不進 URL。
+- **不進 URL**：**語系**（`User.locale`——`localePrefix: "never"`，真相來源是
+  使用者設定，cookie 只當快取；理由見下方判準與
+  `docs/decisions/0002-route-and-locale.md`）、Copilot 的開關狀態與訊息串
+  （跨頁浮層，ephemeral，reload 重置為關閉）、`FdcFeedbackPanel` 的狀態機、
+  Role 切換器（demo 用，A1.10——**特別注意**不應該做成 URL query，否則分享
+  連結會意外把自己的角色帶給別人，應該用 cookie/localStorage 之類的本機狀態）。
+- **判準（取代本節舊版「可分享、需要 reload 後還原的狀態才進 URL」）**：
+  舊判準只能回答「進不進 URL」，對 locale／`sectionId`／`toolId`／`caseId`／
+  檢視模式／`chart`／`indicator` 這些「可分享、reload 後還原」的狀態給出
+  同一個答案，無法進一步分辨哪些該進路徑段、哪些該進 query。改用兩條判準：
+  1. **使用者範圍 vs URL 範圍**：永遠不會想同時看兩份的 → 使用者設定
+     （語系屬此類——沒人會想同時開中英文兩個分頁對照）；
+     有可能想同時看兩份的 → 進 URL（課別與機台屬此類——跨課支援、比對兩台
+     機器都是真實情境，`managerOf`／`supportSections` 本身就是陣列）。
+  2. **路徑 vs query**：路徑 = 不同資源或不同資料合約（`sectionId`／
+     `toolId`／`caseId`／檢視模式，各自對應不同的 `DataSource` 呼叫）；
+     query = 同一資源的檢視參數（`chart`／`indicator`，資料合約不變，只是
+     切換呈現角度）。
 
 **資料時效標示（as-of 時間戳，task C2.2）**：
 
@@ -1103,7 +1156,7 @@ checkbox 是 disable 而非隱藏，因為使用者需要知道「有沒有被�
 承載（如 hint 從「人下的註解・這台現在為什麼不動」擴充為附帶「・更新於 14:32」），
 但這只是建議做法，尚未在任何一節列為強制驗收條件，記入 §9 Open issues。
 
-**i18n（task A1.7/D9）**：
+**i18n（task A1.7/D9，語系決策見 `docs/decisions/0002-route-and-locale.md`）**：
 
 - 所有畫面文字（包含本文件列出的每個固定問句、Callout 說明文字、Empty/Error
   文案）一律進訊息檔，不得硬寫在元件或頁面裡。
@@ -1111,6 +1164,18 @@ checkbox 是 disable 而非隱藏，因為使用者需要知道「有沒有被�
   不是翻譯，照常保留原文；`AskChip` 的 `question`（送給後端的實際問句 key）
   同樣不應該被 i18n 的翻譯流程改動到——只有 `label`（顯示文字）需要翻譯，
   這是 component-spec 已明確提醒的地雷（`AskChip` 重用注意）。
+- **語系不進 URL**：`localePrefix: "never"`，URL 完全不帶語系段。真相來源是
+  `User.locale`；cookie 只當快取，不是權威來源。現階段不做語系切換 UI
+  （`messages/en.json` 是 `{}`，只有一個語系有內容，切換器沒有實際意義）。
+- **資料在地化與 UI 文案在地化是兩套機制，不要混為一談**：
+  - **UI 文案在地化**：畫面上的固定文字（按鈕標籤、Callout 說明、空狀態文案）
+    走 `messages/` + `next-intl` 的 `t()`，缺鍵 fallback 到 zh-TW。
+  - **資料在地化**：課別的雙語名稱（`Section.nameZh`/`nameEn`）是**資料本身
+    帶的欄位**，不是訊息檔的鍵——顯示哪個名稱依 `User.locale` 直接從 `Section`
+    物件選（`zh-TW`→`nameZh`、`en`→`nameEn`），不經過 `t()`。§1.2/§1.3、
+    §5.1/§5.3 已依此改寫。兩套機制服務不同的字串（UI 框架文字 vs 業務資料），
+    未來若要新增其他有雙語欄位的資料（不只是課別），應該延續「資料帶欄位、
+    由呼叫端依 locale 選」這個模式,不要試圖塞進 `messages/`。
 
 **權限 gating 的統一做法**：
 
@@ -1264,6 +1329,9 @@ P5 課別設定／P6 FDC 分析視窗／P7 Copilot 側欄。
   方法**：`grant.manage` 需要選擇要授權給誰，但 `DataSource` 只有
   `getCurrentUser()`，沒有 `listUsers()`／`searchUsers()` 之類的方法；本頁
   這整個 `Zone`（§5.2 第 6 項）也完全沒有 mockup 依據，是 task A9.6 新增需求。
+  **受影響對象已限縮**：因 `grant.manage` 這個 `Zone` 對 editor/viewer 整個不
+  渲染（§5.5 的隱藏/disable 推導），這個缺口只影響 admin 這一種角色看到的畫面
+  ——不需要為 editor/viewer 也設計「列出可授權使用者」的呈現方式。
 - **P6 FDC — t chart 的 `waferId` 選擇機制未定義**：`getTChartAnalysis` 需要
   `waferId`，但沒有 UI 讓使用者切換到「這個 case 的其他片」；本規格假設預設值
   是後端指定的 OOC wafer。
@@ -1284,6 +1352,12 @@ P5 課別設定／P6 FDC 分析視窗／P7 Copilot 側欄。
   不是新創元件，不受「元件名封閉性」規則約束。建議 component-spec 補收這三個
   shell 層元件，或明確聲明 shell 層不在 63 個名冊的範圍內，避免下一輪 review
   誤以為這是本文件自創的元件名。
+- **殼層 — 個人偏好介面無對應元件**：語系（`User.locale`）決定為使用者個人
+  偏好、每個角色都要能改自己的（§5.1、`docs/decisions/0002-route-and-locale.md`），
+  但 component-spec.md 的 63 個元件名冊裡沒有這個東西，依「元件名封閉性」鐵律
+  不自行命名。形態待決定：Header 下拉選單，或獨立的 `/me` 頁面（也連帶決定
+  這是不是需要新路由）。**A10 之前若要落地語系切換 UI，需要先補這個元件到
+  component-spec。**
 - 以下延續自 `component-spec.md` 既有 Open issues，且直接影響本文件對應頁面的
   完整度，一併記錄：`CopilotMessage` 型別缺失（P7）、FDC 回饋 payload 無 schema
   （P6）、t chart 標註 payload 無 schema（P6）、`BuildStep` 無 schema（P4）、

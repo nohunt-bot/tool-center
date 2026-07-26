@@ -87,13 +87,181 @@ Status: active (2026-07-24)
 - [ ] A1.5 Server Actions 骨架（pin / annotate / feedback / settings）+ `useOptimistic`
       Stage A 寫入暫存 -> 樂觀更新與失敗回滾各一測試
 - [ ] A1.6 Demo 模式標示元件（誠實告知假資料）-> 每頁可見
-- [~] A1.7 **i18n 骨架**：next-intl **4.13.4**（2026-07-23 發布，peer 支援 Next ^16）
+- [~] A1.7 **i18n 骨架**（待剩餘 K 項收尾後標記完成——K4／K9／K12 依 Stage A12/R7
+      的順序判斷處理，見該節；先前誤標 `[x]` 但驗收未過，改回未完成標記）：
+      next-intl **4.13.4**（2026-07-23 發布，peer 支援 Next ^16）
       + `app/[locale]/` 路由 + 語系切換（保留路徑與 query）+ `en` 空訊息檔 + zh-TW deepMerge fallback
       + ESLint `no-restricted-syntax` 擋 JSX 硬寫中文（domain/data/test/urd 例外）
       -> **獨立驗收（opus）：9 條驗收全過**，含 byte-level HTML diff 證明純重構（5 條 route 各只差
       8–10 行，全部是新增的語系選單與 href 的 locale 前綴）、intercepting route 雙模式瀏覽器實測
       （點開時底層 pane 為 `livePaneSameNode: true`，未 remount）、standalone build 實跑於 :3300。
-      **判定 FIX-FIRST**，6 項修復派工中（見下）。安全點 commit `3298d7b`。
+      **第一輪判定 FIX-FIRST，6 項修復派工中（F 系列，見 eslint.config.mjs／header.tsx／
+      request.test.ts 內對應註解）。安全點 commit `3298d7b`。**
+      **第二輪 opus 驗收判 FIX-FIRST（輕量）**，四道 gate 由 reviewer 親自重跑複驗
+      （據前手回報：test 131 passed / 6 files，typecheck/lint/test/build 四個 exit 0；
+      這是前手回報的歷史數字，非本輪 commander 當場複驗，故不逕自宣稱「已驗證」）。
+      第二輪修復 G1–G8 處置：
+      - G1 退回未授權新增的 `use-intl` 依賴（`package.json`／`pnpm-lock.yaml` 對 `3298d7b` 已無 diff）
+      - G2 拆掉 `String(...)` 數字包裝（`brick.tsx`／`overview-pane.tsx`）
+      - G3 `NAV_SECTIONS`（課別清單）搬到 `src/data/fixtures/nav.ts`——課別名稱是資料，
+        不該住在 `src/lib/`；import 端（`header.tsx`／`section/[sid]/layout.tsx`）同步更新
+      - G4 ESLint 補「常數文案表」規則：`eslint.config.mjs` 對 `src/lib/**`／`src/components/**`
+        加 `Property > Literal[value=/[一-鿿]/]` 選擇器，攔住 JSX 四條規則攔不到的
+        `export const X = { a: "中文" }` 形態（即 G3 之前 `TOOL_MODE_LABEL` 那種）；
+        排除 `src/data/**`／`src/domain/**`／`**/*.test.*`
+      - G5 `header.tsx` 的 Suspense fallback 不再寫死高度魔術數字：抽出
+        `HEADER_CONTAINER_CLASS` 常數同時餵給 `HeaderBar` 與 `HeaderFallback`，
+        fallback 內容換成骨架色塊，高度改由與真實 header 相同的 flex/padding 規則自然決定
+      - G6 `src/i18n/request.ts` 的 `deepMerge` 補 `__proto__`／`constructor`／`prototype`
+        key 過濾（擋掉 override 觸發 `Object.prototype` 的 `__proto__` setter、換掉合併結果
+        原型的路徑）；`request.test.ts` 用 `JSON.parse('{"__proto__":{"x":1}}')` 產生 own key
+        驗證（物件字面值寫 `__proto__` 是設定原型的語法糖，語義不同，測不到這裡要擋的東西）
+      - G7 `overview-pane.test.tsx` 的 `next-intl/server` mock 補上 `{ locale, namespace }`
+        物件參數形式（`app/[locale]/layout.tsx` 就是這樣呼叫）與 `importOriginal` spread，
+        避免以後有檔案改用物件形式時測試以難懂的 `undefined is not a function` 爆掉
+      - G8（本項）任務檔記錄；另外評估「en.json 填鍵覆寫生效」是否可測（見下）——**可測**，
+        補了 `request.test.ts` 的「`request.ts` 的 default export（實際組態路徑）」describe
+        block（mock `next-intl/server` 的 `getRequestConfig` 為 identity + mock
+        `../../messages/en.json` 的內容為合成物件，不改真正的檔案），證明 override 真的透過
+        `request.ts` 的實際組態路徑（locale 判斷 → 動態 import → deepMerge）蓋過 zh-TW
+      -> 本輪（commander 親跑）四道 gate：`pnpm typecheck` exit 0 / `pnpm lint` exit 0（沒有靠
+      新增停用 lint 規則的註解換來這個 0）/ `pnpm test` **136 passed（6 files）**（比 G4–G8 動工前多 4：G6 的
+      `__proto__` 測試 1 個 + `request.ts` default export 端到端測試 3 個；已用「暫時還原
+      `request.test.ts` 到動工前內容、重跑」的方式直接量出動工前基準是 132 passed，
+      非以「136 − 4」推算）/ `pnpm build` exit 0。G4 另實跑違規樣本
+      （`export const X = { a: "當機處理" }`）確認 eslint 報錯，測完即刪。**已驗證。**
+      **兩個被 reviewer 用實驗推翻的技術主張，留作教訓：**
+      1. `String(...)` 對純 `{count}` 插值是 no-op——`{count}` 訊息鍵餵字串一樣輸出 `1,234`
+         這種千分位格式化只在 `{count, number}` 才會發生；若訊息檔以後改成 `{count, plural}`，
+         字串反而會讓 plural 規則進入未定義行為。這是 G2 把 `String(...)` 拆掉的理由，
+         不是單純的程式碼風格偏好。
+      2. `use-intl` 依賴不是必要依賴——`next-intl` 本身就 re-export `createTranslator`，
+         底層委派同一個 `use-intl` 實例，兩者輸出逐字元相同。這是 G1 退回該依賴的理由。
+      **已知限制（不修，記錄）：**
+      - `overview-pane.test.tsx` 改用 `await OverviewPane(props)` 直接呼叫 async component，
+        元件沒有經過 React reconciliation；未來若元件內長出 `<Suspense>`／error boundary／
+        `cache()`，這些路徑不會被這份測試覆蓋到。
+      - `messages/en.json` 目前仍是 `{}`（使用者明確要求「要 i18n 但不做語言翻譯」，
+        不塞 sentinel 鍵），所以「en.json 真的填了鍵之後頁面會變英文」這件事本身
+        沒有走過真實 messages 檔的端到端驗證——G8 補的測試證明的是 `request.ts` 的組態路徑
+        （locale 判斷 + 動態 import + deepMerge）對合成 override 生效，不是對 en.json 本身
+        的內容生效；等真的填了英文翻譯，仍值得跑一次瀏覽器實測確認畫面真的變英文。
+      **第三輪（本輪）修復 H1–H9：**
+      - H1（BLOCKING）：`eslint.config.mjs` 有兩個 `files` 有重疊（`src/**` 與
+        `src/lib/**`／`src/components/**`）的 config 物件，都設了
+        `no-restricted-syntax`——flat config 語意下，同一個 rule key 在後面出現時
+        是「整組陣列取代」，不是合併／串接。第二個 block（G4 新加的 Property 選擇器）
+        只有 1 條選擇器，導致 `src/lib/**`／`src/components/**` 底下原本的 5 條 JSX
+        選擇器（G4 之前就存在）被靜靜地整組蓋掉，只剩下新加的 1 條 Property 選擇器
+        生效——`pnpm lint` 全程 exit 0，完全沒有訊號。根因是 G4 只驗證了新加的
+        Property 規則本身抓不抓得到違規（`export const X = { a: "當機處理" }`），
+        沒有同時驗證 5 條舊 JSX 規則在同一批 `files` 下是否還活著。
+        修法：把選擇器抽成共用常數 `JSX_SELECTORS`／`PROPERTY_SELECTOR`，兩個
+        block 的 `no-restricted-syntax` 都從這兩個常數組出完整陣列（第二個 block
+        是 `[...JSX_SELECTORS, PROPERTY_SELECTOR]`），選擇器只有一份來源，不會再
+        因為兩份字面陣列互相取代而漏掉規則。驗證：`npx eslint --print-config`
+        對 `header.tsx`（落在 `src/components/**`）量到 6 條 `no-restricted-syntax`
+        選擇器、對 `app/[locale]/layout.tsx`（只落在 `src/**`）量到 5 條；另外在
+        `src/lintsample/`／`src/components/lintsample/` 各放 6 種違規樣本（5 種
+        JSX 形態 + 1 種 Property 形態）分別實跑 `npx eslint`，確認
+        `src/lintsample/` 只抓到 5 種 JSX 形態（Property 規則不適用）、
+        `src/components/lintsample/` 6 種全抓到，驗完即刪，`git status --short`
+        確認乾淨。
+      - H2：`header.tsx` 的 `HEADER_CONTAINER_CLASS` 註解原本暗示「共用 class
+        讓真實 header 跟 loading skeleton 高度一致」，但 reviewer 實測 9 種
+        viewport 寬度，找不到任何一個寬度兩者高度相等（連 flex-wrap 換行斷點都
+        對不上）。改寫註解為事實：共用 class 只保證樣式（padding／border／
+        flex-wrap）一致，不保證高度；目前 CLS 量到 0 的真正原因是用到這個
+        header 的路由全部是 dynamic render（讀 `useSearchParams()` 導致無法
+        static bailout），SSR HTML 本來就不會出現這個 fallback，高度落差在
+        目前設置下不會被使用者看到；並加註：若以後任何路由改成 static
+        prerendering，這個「fallback 反正不會出現」的前提就不成立，需要重新
+        評估。不嘗試校準 skeleton 尺寸去湊真實高度（commander 裁示：成本高、
+        內容一改就會再度過期）。
+      - H3：`src/data/fixtures/nav.ts` 的 `NAV_SECTIONS` 跟 `users.ts` 的
+        `sectionsFixture` 是同一份課別資料的兩份拷貝（只差 accessible 欄位），
+        違反 single source of truth，命名／型別也不符目錄慣例。評估過「完整修
+        法」（併入 sectionsFixture、砍掉 nav.ts、header.tsx 改走
+        `fixturesDataSource.listSections()`）：header.tsx 是 Client Component，
+        在 render 裡同步用這份清單組下拉選單，而 `listSections()` 是 async，要接上
+        得把 Header 改成 Server Component，或是把課別清單從 layout.tsx（Server
+        Component）當 props 一路穿過 client/server 邊界——兩者都是重新調整既有
+        的 Server/Client Component 邊界，裁示不做。改採較小修法：保留獨立檔案，
+        型別改成疊在 `@/domain/tool` 的 `Section` 上（不再自訂 bespoke type），
+        更名 `navSectionsFixture` 符合目錄的 `xxxFixture` 命名慣例，在
+        `src/data/fixtures/index.ts` 註冊（re-export，因為形狀跟 `DataSource`
+        interface 不同，沒有併進 `fixturesDataSource`），並在 `nav.ts` 與
+        `users.ts` 的 `sectionsFixture` 兩處都加註解說明「這兩份必須手動同步」。
+      - H4：`src/i18n/request.ts` 的 `deepMerge` 把 `__proto__`／`constructor`／
+        `prototype` 三個 key 都當危險 key 跳過，但只有 `__proto__` 在
+        `result[key] = value` 賦值語法下有觸發 `Object.prototype` setter、換掉
+        原型的特殊語意；`constructor`／`prototype` 只是普通 own key，一般賦值不會
+        污染原型。舊版連這兩個也跳過的後果：訊息檔若真的用這兩個字當文案鍵，
+        override 會被靜靜丟掉（`deepMerge({constructor:"中文"},{constructor:"EN"})`
+        回傳中文而不是 "EN"）。修法：只特判 `"__proto__"`。刻意不改用
+        `Object.create(null)` 當 result 的 base——那樣會讓既有測試
+        `Object.getPrototypeOf(result) === Object.prototype` 的斷言變成
+        `null !== Object.prototype` 而炸掉，等於用另一種方式打破既有合約；
+        取捨與理由寫在 `request.ts` 的行內註解。`request.test.ts` 補了兩個
+        `it`，分別驗證 `constructor`／`prototype` 當一般文案鍵時 override 正常蓋過。
+      - H5：`CJK_RANGE`（`一-鿿`）涵蓋不到全形標點（（）「」、。等，落在
+        U+3000–303F 與 U+FF00–FFEF），這兩個區塊跟中文字一樣是 locale-specific
+        （en 用半形標點），理當被規則攔到卻沒有。修法：`CJK_RANGE` 加上這兩個
+        區塊。加寬後真的新抓到一個既有違規：`control-bar.tsx` 的機台下拉選單
+        `{tool.id} · {tool.type}（{tool.status}）`，全形括號直接寫在 JSX 裡。
+        修法：把整段組合搬進 `messages/zh-TW.json` 新增的 `shell.toolOptionLabel`
+        鍵（`"{toolId} · {type}（{status}）"`），JSX 改成
+        `t("toolOptionLabel", { toolId, type, status })`。加寬 regex 後另外用
+        `grep -rlP` 掃過全部 `src/**/*.{ts,tsx}`，比對到的其餘全形標點都落在
+        JSDoc／行內註解裡（AST 的 no-restricted-syntax 選擇器不會走到註解），
+        `pnpm lint` 全程維持 exit 0，沒有發現其他需要處理的真違規或假陽性。
+      - H6：`src/lib/nav-fixtures.ts` 的 `NAV_TOOLS` 是跟 `NAV_SECTIONS`
+        同類型的假資料（之後會被真 API 取代），但上一輪只搬了 `NAV_SECTIONS`。
+        檢查 `NAV_TOOLS` 內容（id／type／status 全是英文代碼，如
+        `"SCN-A01"`／`"Scanner"`／`"DOWN"`），沒有任何使用者可見的中文，跟
+        `NAV_SECTIONS`（課別名稱「黃光二課」是中文）不同。選擇方案 (b)：
+        `NAV_TOOLS` 留在 `src/lib/`，改寫 `nav-fixtures.ts` 開頭註解，把「fixture
+        搬去 `src/data/fixtures/`」的判斷標準明講成「內容含不含使用者可見的中文」
+        ——`NAV_SECTIONS` 因為含中文而搬，`NAV_TOOLS` 因為不含中文而沒搬，
+        兩者套用同一條規則，不是「忘了搬」。
+      - H7：`overview-pane.test.tsx` 的 `describe("OverviewPane（機台一覽）"...)`
+        底下原本有 5 個 it，其中第 5 個（大數字千分位斷言）完全沒有呼叫
+        `renderPane`／`OverviewPane`，是對 `messages/zh-TW.json` 直接組
+        translator 斷言格式化行為的 i18n 訊息層測試，混在 OverviewPane 的
+        describe 底下會造成「OverviewPane 有 5 個元件層級測試」的假象。搬到
+        新檔 `src/i18n/messages.test.ts`（斷言逐字保留，強弱不變）。
+      - H8：`overview.footerNote` 訊息鍵原本沒有任何測試覆蓋，打錯字不會被
+        任何測試抓到（`header`／`emptyState` 打錯字會，這個缺口早於這一輪就
+        存在）。在 `overview-pane.test.tsx` 補一個新 it，直接 render
+        `OverviewPane` 並斷言 footerNote 的實際渲染文字，改壞
+        `messages/zh-TW.json` 的 `overview.footerNote` 鍵值會讓這條測試變紅。
+        H7 搬出 + H8 補入之後，`overview-pane.test.tsx` 剛好回到 5 個 it，
+        全部都真的 render `OverviewPane`。
+      -> 本輪（親跑）四道 gate：`pnpm typecheck` exit 0 / `pnpm lint` exit 0
+      （沒有新增任何 `eslint-disable` 換來這個 0，也沒有靠加寬既有規則排除範圍
+      或排除更多檔案來閃過任何一項 finding）/ `pnpm test` **139 passed（7 files）**
+      （比動工前的 136 多 3：H4 的 `constructor`／`prototype` override 測試各 1
+      個 + H8 的 footerNote 測試 1 個；H7 只是搬移既有 1 個 it，不影響總數）/
+      `pnpm build` exit 0。H1 的樣本驗證（`src/lintsample/`／
+      `src/components/lintsample/`，各 6 種違規樣本；`src/data/`／`src/domain/`／
+      `**/*.test.*` 各一個排除清單樣本）測完即刪，`git status --short` 確認乾淨。
+      **已知限制（H9，記錄）：**
+      - `VIEW_EMOJI`（`control-bar.tsx`）把 emoji 常值搬出訊息檔、留在程式碼裡
+        （F2 的決定：emoji 視為 locale-invariant，不隨語系變化）。這是刻意的
+        取捨，但後果需要記在案：如果 `messages/en.json` 以後真的填了鍵，
+        英文 locale 會被迫沿用同一組 emoji，沒有辦法針對 locale 個別調整
+        （例如某些 emoji 在特定文化語境下含義不同）。
+      - `overview-pane.test.tsx` 對 `next-intl/server` 的 `getTranslations` mock
+        同時支援「字串 namespace」與「`{ locale, namespace }` 物件」兩種呼叫
+        形式（G7 補的），但目前沒有任何測試分別驗證這兩個分支都有被真的走到
+        ——如果其中一個分支的實作壞掉，現有測試不保證會抓到，這段防禦性程式碼
+        目前是未驗證狀態。
+      - H1 的 blocking 根因記錄：flat config 下，兩個 `files` 有重疊的 config
+        物件對同一個 rule key（`no-restricted-syntax`）各自設一次陣列時，後者
+        整組取代前者，不會合併——這件事本身沒有任何 ESLint 警告或錯誤，
+        `pnpm lint` 全程維持 exit 0，導致 G4 加新規則的同時，靜靜停用了
+        `src/components/**`／`src/lib/**` 底下**原有的 5 條 JSX 硬寫中文規則
+        （全被蓋掉，只剩新加的第 6 條 Property 選擇器生效）**。
 - [x] A1.8 **受控 taxonomy 定義表** -> 併入 A1.2（英文 code 為主鍵 + zh-TW 說明）。
       「=== 訊息檔鍵值」那一項待 A1.7 建 i18n 後補上
 - [x] A1.9 **`resolveRole` + 權限矩陣資料結構**（`lib/permission.ts`，`Record<Capability, Role[]>`）
@@ -228,6 +396,57 @@ Status: active (2026-07-24)
 - [ ] A11.2 已知落差清單（哪些是假的、哪些 Stage B 才會真）-> `docs/stage-a-gaps.md`
 - [ ] A11.3 課內工程師試用 + 回饋收斂 -> 回饋條列進本檔 Open questions
 
+### Stage A12 — 路由前綴／語系不進 URL／課別識別改用 code（R1–R10）
+
+依 D12（`docs/decisions/0002-route-and-locale.md`）拍板後新增，收斂三件互相牽動
+的改動：`Section` 型別改用 `code` 識別、路由目錄搬遷成完整詞前綴、`localePrefix`
+改 `never`。R9（本批文件更新）已完成，見下方逐項標記。
+
+- [x] R9 文件更新（本次工作）-> `docs/decisions/0002-route-and-locale.md`、
+      `docs/ui/page-spec.md`、`docs/permission-matrix.md`、本檔 Decisions/Plan
+      區皆已更新，見驗收 1–8
+- [ ] R1 `Section` 改 `{code,nameEn,nameZh}`，`SectionId` 語意改 code
+      （`src/domain/tool.ts`）-> `tsc` 通過；既有引用 `nameEn` 當識別碼的地方
+      逐一改用 `code`
+- [ ] R2 `listSections`／`getSection` 回傳新形狀；adapter 把使用者記錄正規化成 code
+      -> fixtures 與既有測試同步更新，`fixtures.test.ts` 對新形狀跑 zod `.parse()`
+- [ ] R3 兩份重複的課別清單收斂成一份並補 code
+      （`src/data/fixtures/nav.ts` 的 `navSectionsFixture` 與 `users.ts` 的
+      `sectionsFixture`，見 A1.7 H3 的「必須手動同步」註記，這批工作是補上
+      真正收斂）-> 兩處引用點（`header.tsx`／`section/[sid]/layout.tsx`）改
+      指向同一份資料來源
+- [ ] R4 權限鍵語意改 code（邏輯不變）-> `lib/permission.ts`／
+      `permission-matrix.md` 的 `sectionId` 一律是 code；既有 69 項矩陣斷言
+      邏輯不變只需確認測試資料改用 code 值
+- [ ] R5 route 目錄搬遷、`localePrefix: "never"`、`live` 變 index -> curl/瀏覽器
+      實測新 9 條路徑（`/section/<code>`、`/section/<code>/settings`、
+      `/tool/<tid>`、`/tool/<tid>/history`、`/tool/<tid>/diagnosis`、
+      `/tool/<tid>/fdc/<caseId>` 等），確認機台子樹 URL 不含 `sectionId` 段
+- [ ] R6 連結產生點 4 處更新（`brick.tsx`／`header.tsx`／`control-bar.tsx`／
+      `page.tsx`）-> 逐一 grep 確認舊路徑字串（`/section/{sid}/tool/`、
+      `[locale]`）已清除
+- [ ] R7 `User.locale` + `request.ts` 改讀它；移除 `switchLocale` 與
+      `useSearchParams`（連帶移除 `<Suspense>` 與 `HeaderFallback` 整組）
+      -> `pnpm typecheck && pnpm lint && pnpm test && pnpm build` 全綠；
+      **本項落地後，A1.7 遺留的 K4／K9／K12（`header.tsx` 的 CLS 因果註解、
+      高度主張、`4,181 B` 量測數字）自動失效，不需要另外修——見下方
+      「A1.7 收尾順序判斷」**
+- [ ] R8 `@modal/(.)fdc/[caseId]` 搬到 `tool/[tid]/` 底下 -> 瀏覽器實測
+      intercepting/parallel route 雙模式（modal 開／page 直開）在新路徑下行為
+      不變（沿用既有 A0.8 驗證方式）
+- [ ] R10 路徑斷言更新、補 code↔name 對照測試 -> 既有測試裡斷言舊路徑字串的
+      地方全部改新路徑；新增至少一組「同一 `code` 對照 `nameZh`/`nameEn`」的
+      測試（`listSections()` 邊界）
+
+**A1.7 收尾順序判斷（記錄，不是遺漏）**：A1.7 驗收中還欠 K4／K9／K12
+（`header.tsx` 的 CLS 因果註解準確性、`HEADER_CONTAINER_CLASS` 高度主張是否
+仍成立、`4,181 B` 這個量測數字的來源覆核）。這三項刻意跳過不修，因為 R7 會把
+`header.tsx` 裡 `useSearchParams`／`<Suspense>`／`HeaderFallback` 這整組程式碼
+刪掉——K4／K9／K12 全部是在描述這組即將被刪除的程式碼，修完就刪是浪費工。
+順序訂為「R7 先做，K4/K9/K12 隨程式碼一起消失，不需要單獨結案」；若 R7 因故
+延後或改變設計（例如 `header.tsx` 保留但改用其他機制而非整段刪除），才需要
+回頭重新評估這三項是否仍然要修。
+
 ### Stage B — 接既有 API（15 天）
 
 - [ ] B0.1 既有 API 盤點與落差分析（**可與 Stage A 平行，不阻塞**）-> `docs/api/inventory.md`
@@ -322,6 +541,17 @@ Status: active (2026-07-24)
   點 SCN-A01 導到 `/tool/SCN-A01/live`。截圖與 mockup L494–565 一致。
   **A1 已驗證部分：A1.1／A1.2／A1.3／A1.4／A1.8／A1.9。剩 A1.0（BLOCKED 缺 API sample）、
   A1.5 Server Actions／A1.6 demo 標示／A1.7 i18n／A1.10 角色切換器／A1.11 gating。**
+- 2026-07-25 | A1 | A1.7 i18n 第二輪修正 G1–G8 完成，commander 接手（前一支 agent 做完 G1–G3
+  後中斷；base commit `3298d7b`，全程未 commit）。逐項處置與理由見上方 A1.7 條目，此處只記
+  gate 結果：commander 親跑 `pnpm typecheck`=0、`pnpm lint`=0（沒有靠新增停用 lint 規則的
+  註解換來這個 0）、
+  `pnpm test`=**136 passed（6 files，比動工前 132 多 4）**、`pnpm build`=0。G4 的 ESLint
+  新規則另外用違規樣本（`export const X = { a: "當機處理" }`）實跑確認會報錯，測完即刪。
+  **已知落差**：`grep -rn "黃光\|蝕刻" src/lib/ src/components/` 目前非空——命中全在
+  `overview-pane.test.tsx`（`sectionName="黃光二課"` 等測試輸入值），經比對 `3298d7b` 這些
+  字串在該檔案裡本來就存在，與 G3 無關（G3 動的是 `NAV_SECTIONS` 資料本體，不是這份測試的
+  prop 輸入），ESLint 規則也把 `*.test.*` 排除在外視為合法測試資料。不動測試檔字句去湊 grep
+  通過。
 
 ---
 
@@ -382,6 +612,31 @@ Status: active (2026-07-24)
   **`en` 訊息檔建立但留空，缺鍵 fallback 到 zh-TW。**
   理由：架構成本一次付清（事後補要掃過每個元件），翻譯成本延後到真的需要英文時再付。
   例外：受控 taxonomy 的英文 code 是**識別碼不是翻譯**（`STABLE` / `MEAN_SHIFT`…），照常實作。
+  **路由與切換器細節已被 D12 取代**：本條寫的 `app/[locale]/` 路由與「語系切換可運作」
+  是 A1.7 當時的落地方式，D12 定案後改為 `localePrefix: "never"`（語系不進 URL）、
+  現階段不做語系切換 UI——「建 i18n 架構但不產翻譯」這個核心決策不變，變的只是路由
+  與切換器這兩個實作細節，見 D12。
+- **D12 路由前綴、語系不進 URL、課別識別改用 code**（使用者拍板 2026-07-26，詳見
+  `docs/decisions/0002-route-and-locale.md`）：
+  - 路由改用完整詞前綴（方案 C）：`/section/<code>`、`/section/<code>/settings`、
+    `/tool/<tid>`（當機處理即 index，不再有 `/live` 段）、`/tool/<tid>/history`、
+    `/tool/<tid>/diagnosis`、`/tool/<tid>/fdc/<caseId>`；機台子樹不帶課別段。
+    被否決：方案 A（無前綴詞，根層動態段會吃掉未來所有單段路徑）、方案 B
+    （單字母前綴，可讀性差）、方案 D（檢視模式進 query，三個檢視資料合約不同,
+    併成一個 route 失去 code split）。
+  - 語系不進 URL：`localePrefix: "never"`，真相來源是 `User.locale`，cookie 只當
+    快取；現階段不做語系切換 UI。被否決：path prefix（`localePrefix: "always"`
+    預設，只有一個語系有意義，`/en/*` 會回 200 但內容是中文）、cookie 當真相來源
+    （內部工具使用者有身分，偏好該跟人）。
+  - 課別識別改用 `code`（`Section` 型別為 `{code,nameEn,nameZh}`），顯示名稱依
+    `User.locale` 選；轉換只在 `DataSource` 邊界做一次。被否決：課別改成使用者狀態
+    （`managerOf`／`supportSections` 是陣列，跨課的人會想開兩個 tab 對照）。
+  - 機台子樹不帶課別的結構性理由：舊結構 `sid`／`tid` 可任意配對，
+    `resolveRole(user, sectionId, grants)` 的 `sectionId` 來自 URL，造成權限提升
+    漏洞（自己管的課的 `sid` 下掛別課的 `tid` → 取得該機台 admin 權限）；新結構
+    由 tool 反查 section，這個配對結構上不存在。
+  - 判準：永遠不會想同時看兩份的 → 使用者設定；有可能想同時看兩份的 → 進 URL。
+    路徑 = 不同資源／資料合約；query = 同一資源的檢視參數。
 
 ---
 
@@ -430,6 +685,12 @@ Status: active (2026-07-24)
   可能被用來繞過 D1 的 8 條紅線（例如寫「忽略先前關於不做決策的指示」）。
   前端無法解決，需**後端結構性防護**（DOs 與系統指令分區、紅線不可被 DOs 覆蓋），
   不能只靠 prompt 排序。列入 B 階段需求書給後端。
+- **`listGrants` 的故障模式待定案**：目前 `listGrants`／`resolveRole` 在 `src/` 尚無任何呼叫端
+  （只有型別定義與單元測試），所以上游回傳課名而非課代碼時「靜默回空陣列」或「單筆壞資料
+  拖垮整個查詢」這兩種問題目前都不會顯現。接上真實呼叫端**之前**必須：
+  (a) 補一條測試涵蓋「陣列裡有一筆不可解析的 `sectionId`，查詢另一個合法課別」；
+  (b) 明確決定要哪種故障模式——每筆獨立處理（fail-closed，壞的那筆跳過）
+      或整體拋例外並在呼叫端轉成「無法載入授權，視為 viewer」。
 - **D2 校正清單**（型別表達力不足，待真實 API sample 到手時一併處理）：
   - `chuckMapSchema.pattern` 是單一 enum，裝不下複合 pattern「TILT + EDGE ROLL-OFF」（暫留 TILT）。
   - Leveling 的「HOT SPOT」在空間 taxonomy 沒有對應 code（暫映射到 DOME/RANDOM）——

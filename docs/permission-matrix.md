@@ -31,6 +31,15 @@ type Grant = {
 }
 ```
 
+**`SectionId` 的語意是課代碼（`Section.code`），不是課名。** 課別實際有三個欄位：
+`code`（英數字串，唯一識別，用於 URL 與權限鍵）、`nameEn`（如 `LITHO-02`）、
+`nameZh`（如「黃光二課」）。先前把 `nameEn` 當識別碼是錯的——`LITHO-02` 是
+英文課名，不保證唯一（唯一性未確認），權限比對必須用 `code`（見
+`docs/decisions/0002-route-and-locale.md`）。下面「同一位使用者在 LITHO-02 是
+admin，切到 ETCH-01 就是 viewer」這個例句沿用 mockup 的課名寫法方便閱讀，
+但 `resolveRole()` 實際比對的 `sectionId` 參數傳進去的必須是對應的 `code`，
+不是這裡顯示的 `nameEn` 字面值。
+
 同一位使用者在 LITHO-02 是 admin，切到 ETCH-01 就是 viewer。所有權限判定都必須帶
 `sectionId`，**任何不帶 section 的權限檢查都是 bug**。
 
@@ -78,6 +87,13 @@ server 端直接 403（mockup L463–466 的行為，但要在 server 強制，�
 | 21 | KM Domain 來源 新增 | ✓ | ✓ | ✗ | L1353 |
 | 22 | KM Domain 來源 移除 | ✓ | ✗ | ✗ | ⚠ 見變更 C1 |
 | 23 | **授予／撤銷課內 editor 權限** | ✓ | ✗ | ✗ | Q11 grant 機制 |
+
+**語系偏好不是 capability，不列入這 23 項。** 語系（`User.locale`）是**使用者範圍**，
+不是課別範圍——它不隨 `sectionId` 變化，同一個人切課別（LITHO-02 → ETCH-01）
+角色會變，但語系不會變。`resolveRole()` 的三個角色（admin／editor／viewer）在
+語系偏好上沒有差異：三者都能改自己的 `User.locale`，這不是需要 `can(role,
+capability)` 判斷的動作，因此不進 `Record<Capability, Role[]>` 這份矩陣（詳見
+`docs/decisions/0002-route-and-locale.md`）。
 
 ---
 
