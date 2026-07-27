@@ -18,6 +18,9 @@ export const currentUserFixture: User = {
   sectionId: LITHO02_CODE,
   managerOf: [],
   supportSections: [],
+  // R7：畫面語系的真相來源（見 src/i18n/request.ts）。現階段只有 zh-TW
+  // 有實際內容（messages/en.json 是 {}），fixture 使用者固定這個值。
+  locale: "zh-TW",
 };
 
 /**

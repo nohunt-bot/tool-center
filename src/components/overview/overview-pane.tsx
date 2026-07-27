@@ -62,7 +62,7 @@ export async function OverviewPane({
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
         {tools.map((tool) => (
-          <Brick key={tool.id} sectionId={sectionId} tool={tool} />
+          <Brick key={tool.id} tool={tool} />
         ))}
       </div>
 

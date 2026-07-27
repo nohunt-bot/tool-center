@@ -625,21 +625,26 @@ Props 一律引用 `src/domain/**`、`src/lib/status.ts`、`src/lib/permission.t
 - **mockup 出處**：L508–563。
 - **既有實作**：`src/components/overview/brick.tsx`（`Brick`），已完整實作且有測試覆蓋
   （task A2.1）。
-- **Props**（既有簽名）：
+- **Props**（R5/R6 之後的簽名——**本規格這一波已修改**，見下方重用注意）：
   ```ts
-  function Brick({ sectionId, tool }: { sectionId: string; tool: ToolSummary }): JSX.Element;
+  function Brick({ tool }: { tool: ToolSummary }): JSX.Element;
   ```
 - **變體/狀態**：六種 `ToolStatus` 底色 × 有/無 `mtbiHours` × 有/無 `note`
   （`statLine()` 已處理三種文案分支，見既有程式碼註解）。
-- **互動行為**：點擊或鍵盤 Enter/Space 導到 `/section/{sectionId}/tool/{tool.id}/live`。
+- **互動行為**：點擊或鍵盤 Enter/Space 導到 `/tool/{tool.id}`（R5：機台子樹不帶
+  課別段，不再是 `/section/{sectionId}/tool/{tool.id}/live`；課別代碼在
+  `tool/[tid]/layout.tsx` 由 `getToolSection(tid)` 反查，`Brick` 導覽時
+  不需要也不再傳遞 `sectionId`）。
 - **權限**：`view.panes`（ALL）——進入一覽頁本身不需額外 capability。
 - **a11y**：既有實作已有 `role="button"` `tabIndex=0` 與 Enter/Space handler。
 - **紅線**：不適用（純導覽，無寫入、無 pattern 判定）。
-- **重用注意**：本規格**不修改**這個元件的 props/行為，僅記錄它是 `Zone` 之外
-  另一個「既有」的參照點，讓頁面 spec 直接引用 `Brick` 這個名字，不要另外發明
-  `ToolBrick` 這個新名字造成兩套稱呼並存的混淆——**建議**：頁面 spec 統一稱它為
-  `Brick`（既有名），本文件表格用 `ToolBrick` 只是為了在「Domain 元件」分類裡保持
-  一致的命名風格，實際 import 仍是 `Brick`。
+- **重用注意**：本規格上一輪寫的「不修改這個元件的 props/行為」已經**不是事實**——
+  R5/R6（`docs/decisions/0002-route-and-locale.md`，機台子樹路徑重構）把
+  `sectionId` prop 整個移除、導覽目標從 `/section/{sectionId}/tool/{tool.id}/live`
+  改成 `/tool/{tool.id}`，這裡同步更新成目前的實際簽名與行為，不再假裝沒改過。
+  命名仍延續前一版的結論：頁面 spec 統一稱它為 `Brick`（既有名），本文件表格用
+  `ToolBrick` 只是為了在「Domain 元件」分類裡保持一致的命名風格，實際 import
+  仍是 `Brick`，不要另外發明 `ToolBrick` 這個新名字造成兩套稱呼並存的混淆。
 
 #### ToolCommandRow
 

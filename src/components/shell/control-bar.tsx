@@ -27,9 +27,16 @@ const VIEW_EMOJI: Readonly<Record<View, string>> = {
  * 檢視與機台都是 URL 的一部分（mockup 只存在 DOM，reload 就掉）。
  * 一覽模式下機台欄位停用——與 mockup L2127 的行為一致。
  *
- * usePathname 特意用 next/navigation 版（含 locale 前綴）：下面只是找 "tool" 這個
- * literal 片段再取後兩段，跟 locale 前綴無關，不需要 next-intl 版本。
- * useRouter 則要用 next-intl 版（@/i18n/navigation），push 時才會自動帶目前 locale。
+ * R5／R6：機台子樹不帶課別段，路徑形狀從
+ * `/section/<sid>/tool/<tid>/<mode>` 改成 `/tool/<tid>` (當機處理，index，
+ * 不再有 `/live` 段) ／`/tool/<tid>/history` ／`/tool/<tid>/diagnosis`；
+ * 一覽頁是 `/section/<code>`。下面的判斷改成看第一段是不是 "tool"，不再
+ * 找 "tool" 這個片段在路徑中間的位置。
+ *
+ * usePathname 特意用 next/navigation 版（含 locale 前綴）：locale 前綴在
+ * `localePrefix: "never"` 之下本來就不存在，這裡沿用舊有 import 只是因為
+ * 判斷邏輯本身跟 locale 前綴無關（找路徑第一段），不需要 next-intl 版本。
+ * useRouter 則用 next-intl 版（@/i18n/navigation），維持既有慣例。
  *
  * M1：`tools` 一律由呼叫端（layout.tsx，Server Component）呼叫
  * `fixturesDataSource.listTools(sectionId)` 算好再當 prop 傳入，
@@ -55,16 +62,22 @@ export function ControlBar({
   const t = useTranslations("shell");
 
   const segments = pathname.split("/").filter(Boolean);
-  const toolIndex = segments.indexOf("tool");
-  const pathToolId = toolIndex >= 0 ? segments[toolIndex + 1] : undefined;
-  const pathMode = toolIndex >= 0 ? segments[toolIndex + 2] : undefined;
+  const isToolRoute = segments[0] === "tool";
+  const pathToolId = isToolRoute ? segments[1] : undefined;
+  const modeSegment = isToolRoute ? segments[2] : undefined;
 
-  const view: View = pathMode !== undefined && isToolMode(pathMode) ? pathMode : "overview";
+  // 沒有 mode 段（`/tool/<tid>` 本身）＝當機處理（"live"），這是 index 頁，
+  // 不是缺資料的 fallback；只有 history／diagnosis 是明確的第三段。
+  const view: View = !isToolRoute
+    ? "overview"
+    : modeSegment !== undefined && isToolMode(modeSegment) && modeSegment !== "live"
+      ? modeSegment
+      : "live";
   const hasTools = tools.length > 0;
   // M7：改前是 `NAV_TOOLS[0]!.id`，那份常數保證非空。現在 `tools` 來自
   // 課別過濾後的 fixture，理論上可以是空陣列（例如某課別目前沒有任何
   // 機台）——這種情況下不能 fallback 出空字串當 toolId，否則使用者一旦
-  // 切到 tool 模式就會產生 `/section/x/tool//live` 這種畸形 URL。
+  // 切到 tool 模式就會產生 `/tool/`（R5 之後的畸形 URL 形狀）。
   // 下面把「機台下拉停用」跟「不允許切到 tool 模式」（mode select 的
   // 非 overview 選項 disabled）兩件事都做了，"" 只是安全落底、
   // 正常情況下不會真的被拿去組 URL。
@@ -83,7 +96,12 @@ export function ControlBar({
       router.push(`/section/${sectionId}`);
       return;
     }
-    router.push(`/section/${sectionId}/tool/${nextToolId}/${nextView}`);
+    // R5：機台子樹不帶課別段。"live"（當機處理）是 index 頁，沒有 mode 段。
+    if (nextView === "live") {
+      router.push(`/tool/${nextToolId}`);
+      return;
+    }
+    router.push(`/tool/${nextToolId}/${nextView}`);
   }
 
   return (

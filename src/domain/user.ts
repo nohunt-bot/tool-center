@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { routing } from "@/i18n/routing";
 
 /**
  * 角色**相對於課別**計算，不是使用者的全域屬性。
@@ -21,6 +22,17 @@ export type Role = z.infer<typeof roleSchema>;
 export const sectionIdSchema = z.string().min(1);
 export type SectionId = z.infer<typeof sectionIdSchema>;
 
+/**
+ * 使用者介面語系。值域對齊 `routing.locales`（`@/i18n/routing`）——不另開
+ * 一份獨立的語系清單，避免兩處定義漂移。
+ *
+ * R7（`docs/decisions/0002-route-and-locale.md`）：`localePrefix: "never"`
+ * 之後 URL 不帶語系段，`User.locale` 是畫面語系的真相來源，cookie 只當
+ * 快取（見 `src/i18n/request.ts`）。
+ */
+export const localeSchema = z.enum(routing.locales);
+export type Locale = z.infer<typeof localeSchema>;
+
 export const userSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
@@ -30,6 +42,8 @@ export const userSchema = z.object({
   managerOf: z.array(sectionIdSchema).readonly(),
   /** 可跨課進入的課別（沒有支援權限連看都看不到） */
   supportSections: z.array(sectionIdSchema).readonly(),
+  /** 畫面語系——見 localeSchema 的說明 */
+  locale: localeSchema,
 });
 export type User = z.infer<typeof userSchema>;
 

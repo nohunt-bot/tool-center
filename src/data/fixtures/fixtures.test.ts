@@ -23,10 +23,12 @@ import { CHRONIC_DEFINITION } from "@/domain/taxonomy";
 import { crossDiagnosisSchema, spatialAnalysisSchema } from "@/domain/spatial";
 import { crossDiagnosisFixture, spatialAnalysesFixture } from "@/data/fixtures/spatial";
 import { sectionSchema, toolSchema, toolSummarySchema } from "@/domain/tool";
-import { LITHO02_CODE, sectionsFixture } from "@/data/fixtures/sections";
+import { ETCH01_CODE, LITHO02_CODE, sectionsFixture } from "@/data/fixtures/sections";
 import { getToolFixture, listToolSummariesFixture } from "@/data/fixtures/tools";
 import { grantSchema, userSchema } from "@/domain/user";
 import { currentUserFixture, grantsFixture } from "@/data/fixtures/users";
+import { fixturesDataSource } from "@/data/fixtures";
+import { ToolNotFoundError } from "@/data/types";
 
 /**
  * 這個測試就是「fixtures 真的符合型別」的證明——
@@ -89,6 +91,39 @@ describe("fixtures：機台", () => {
 
   it("未知機台 id 丟明確錯誤", () => {
     expect(() => getToolFixture(LITHO02_CODE, "NO-SUCH-TOOL")).toThrow();
+  });
+});
+
+/**
+ * P2(b)：`getToolSection` 是 R5 拔掉「sid/tid 任意配對取得權限」漏洞的關鍵
+ * 反查點（見 `tool/[tid]/layout.tsx`、`section-shell.tsx` 開頭的長註解），
+ * 但在這一波之前一條測試都沒有——這裡補上三種行為：查無機台、跨課機台的
+ * 權威反查、以及查無機台時丟出可辨識的 `ToolNotFoundError`（P1 用它跟
+ * 「其他失敗」區分，呼叫端只攔這個型別轉 notFound()）。
+ */
+describe("fixtures：getToolSection（R5 機台 → 課別反查）", () => {
+  it("已知機台：回傳該機台實際所屬課代碼", async () => {
+    await expect(fixturesDataSource.getToolSection("SCN-A01")).resolves.toBe(LITHO02_CODE);
+  });
+
+  it("跨課機台：反查回的是全域機台清單的權威值，不是呼叫端能左右的東西——" +
+    "目前登入者屬於 LITHO02_CODE，但 ETC-D01 實際屬於 ETCH01_CODE，" +
+    "getToolSection 仍必須回傳 ETCH01_CODE（若實作誤用「目前使用者的課別」" +
+    "當 fallback／預設值，這條會抓到）", async () => {
+    await expect(fixturesDataSource.getToolSection("ETC-D01")).resolves.toBe(ETCH01_CODE);
+    // 反查結果與呼叫端無關：呼叫兩次（模擬兩個不同呼叫端）拿到的答案必須
+    // 完全相同，不會因為「誰在問」而有任何差異。
+    await expect(fixturesDataSource.getToolSection("ETC-D01")).resolves.toBe(
+      await fixturesDataSource.getToolSection("ETC-D01"),
+    );
+  });
+
+  it("未知機台：reject 一個可辨識的 ToolNotFoundError（不是泛用 Error）——" +
+    "P1：呼叫端（tool/[tid]/layout.tsx）只攔這個型別轉 notFound()，" +
+    "其他失敗必須原樣往上拋", async () => {
+    const rejection = fixturesDataSource.getToolSection("NO-SUCH-TOOL");
+    await expect(rejection).rejects.toBeInstanceOf(ToolNotFoundError);
+    await expect(rejection).rejects.toMatchObject({ toolId: "NO-SUCH-TOOL" });
   });
 });
 

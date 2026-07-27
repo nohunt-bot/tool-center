@@ -1,5 +1,6 @@
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
+import { fixturesDataSource } from "@/data/fixtures";
 import { routing } from "./routing";
 import zhTW from "../../messages/zh-TW.json";
 
@@ -68,9 +69,48 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  const requested = await requestLocale;
-  const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
+/**
+ * R7（`docs/decisions/0002-route-and-locale.md`）：`localePrefix: "never"`
+ * 之後 URL 不帶語系段，next-intl 原本靠 `requestLocale`（從 cookie
+ * `NEXT_LOCALE` 或 `Accept-Language` 協商出來的值）決定 locale 的機制不再
+ * 是權威——這裡改成問「目前登入者」的語系（`User.locale`），cookie 至多
+ * 只能當這個瀏覽器上次看到的語系快取，不能拿來決定畫面語系（那樣等於繞一圈
+ * 回到 URL/瀏覽器狀態當真相來源，R7 明確要拔除的就是這件事）。
+ *
+ * 現階段沒有真實的「目前登入者」API，直接呼叫 `fixturesDataSource.getCurrentUser()`。
+ * Stage B 接真實 API 時，這裡改成呼叫真正的使用者資料端點取代
+ * `fixturesDataSource.getCurrentUser()`——回傳形狀一樣是帶 `locale` 欄位的
+ * `User`，這個函式本身的邏輯（`hasLocale` 防呆＋deepMerge 訊息合併）不用改。
+ *
+ * P4(a) 成本備忘（現在不實作，Stage A fixtures 呼叫零成本，先留紀錄）：
+ * `getRequestConfig()` 每個 request 都會重跑一次（含每次 RSC navigation，
+ * 不只是整頁重新整理）——Stage A 這裡是同步查記憶體 fixture，沒有實際成本，
+ * 但 Stage B 換成真實 API 後，`getCurrentUser()` 會變成一次真正的網路往返，
+ * 每次導覽多打一次使用者 API 是不可接受的（一次 SPA 內的分頁切換不該疊加
+ * 出等同於整頁重新整理的延遲）。屆時必須在這裡（或更上層）加上請求層級的
+ * 快取／memoization（例如 React `cache()`，讓同一個 request 內的多次呼叫
+ * 共用一次結果；跨 request 的快取策略——TTL、失效時機——需要另外設計，
+ * 不是這裡幾行就能決定的）。
+ *
+ * P4(b) 失敗降級（**這裡現在就做**）：`getCurrentUser()`
+ * 若直接 throw 且沒人接住，`getRequestConfig()` 會跟著整個 throw，
+ * next-intl 沒有這個 request 的 locale/messages 可用，等於整站沒有畫面
+ * （單一使用者資料源失敗，卻讓所有人都看不到任何頁面，是不成比例的單點
+ * 故障半徑）。這裡用 try/catch 接住任何失敗，降級到 `routing.defaultLocale`
+ * （而不是導向某個特定使用者的語系猜測）——寧可用預設語系把頁面撐起來，
+ * 也不要讓一次使用者資料查詢失敗拖垮整站。
+ */
+export default getRequestConfig(async () => {
+  let userLocale: string = routing.defaultLocale;
+  try {
+    const user = await fixturesDataSource.getCurrentUser();
+    userLocale = user.locale;
+  } catch {
+    // 降級：拿不到目前登入者（Stage B 之後可能是逾時／5xx／網路中斷）時，
+    // 用預設語系撐住畫面，不讓整站因為這一次查詢失敗而完全沒有輸出。
+    userLocale = routing.defaultLocale;
+  }
+  const locale = hasLocale(routing.locales, userLocale) ? userLocale : routing.defaultLocale;
 
   const messages =
     locale === "zh-TW"

@@ -5,16 +5,14 @@ import { Header, type NavSection } from "@/components/shell/header";
 import { ETCH01_CODE, LITHO01_CODE, LITHO02_CODE } from "@/data/fixtures/sections";
 import zhMessages from "../../../messages/zh-TW.json";
 
-// Header 是 client component，用到 next/navigation 的 useSearchParams 與（透過
-// @/i18n/navigation）useRouter／usePathname；jsdom 沒有 App Router context，
-// 全部要 mock 掉（做法沿用 overview-pane.test.tsx／control-bar.test.tsx 的既有慣例）。
-vi.mock("next/navigation", () => ({
+// Header 是 client component，只用到 @/i18n/navigation 的 useRouter；直接
+// mock 這個模組本身（而不是它底下轉呼叫的 next/navigation），避免連帶要
+// 補 next-intl createNavigation 內部包裝會用到的 usePathname（沿用
+// control-bar.test.tsx 的做法）。jsdom 沒有 App Router context，要 mock 掉。
+//
+// R7：語系切換已整個移除（不再讀網址列查詢參數保留 query 做 locale 切換）。
+vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
-  usePathname: () => "/section/SEC-1002",
-  useSearchParams: () => new URLSearchParams(),
-  useParams: () => ({}),
-  redirect: vi.fn(),
-  permanentRedirect: vi.fn(),
 }));
 
 const sections: readonly NavSection[] = [

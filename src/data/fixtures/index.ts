@@ -1,4 +1,4 @@
-import type { DataSource, DataSourceMeta } from "@/data/types";
+import { ToolNotFoundError, type DataSource, type DataSourceMeta } from "@/data/types";
 import { resolveSectionCode } from "@/data/section-ref";
 import {
   chronicFlagsFixture,
@@ -12,7 +12,11 @@ import { graphQueryResultFixture } from "@/data/fixtures/graph";
 import { LITHO02_CODE, sectionsFixture } from "@/data/fixtures/sections";
 import { sectionSettingsFixture } from "@/data/fixtures/settings";
 import { crossDiagnosisFixture, spatialAnalysesFixture } from "@/data/fixtures/spatial";
-import { getToolFixture, listToolSummariesFixture } from "@/data/fixtures/tools";
+import {
+  findToolSectionFixture,
+  getToolFixture,
+  listToolSummariesFixture,
+} from "@/data/fixtures/tools";
 import { currentUserFixture, grantsFixture } from "@/data/fixtures/users";
 
 export { sectionsFixture } from "@/data/fixtures/sections";
@@ -57,8 +61,23 @@ export const fixturesDataSource: DataSource = {
   listTools(sectionCode) {
     return Promise.resolve(listToolSummariesFixture(sectionCode));
   },
-  getTool(sectionCode, toolId) {
-    return Promise.resolve(getToolFixture(sectionCode, toolId));
+  // P1 對齊：宣告成 async——getToolFixture() 查無機台時是同步 throw，
+  // 若這裡寫成 `return Promise.resolve(getToolFixture(...))`，那個 throw
+  // 會發生在 Promise.resolve() 的參數求值階段，也就是「同步」丟出例外
+  // （呼叫端就算包 .then/.catch 也接不到，得用 try/catch 才接得住），
+  // 跟 `getToolSection` 底下「reject 一個 rejected promise」的風格不一致。
+  // 宣告成 async function 後，函式內任何同步 throw 都會被自動包成 rejected
+  // promise，呼叫端不管走 await/.catch 都能一致地接住失敗——不用去猜某個
+  // DataSource 方法的失敗是「同步丟」還是「非同步 reject」。
+  async getTool(sectionCode, toolId) {
+    return getToolFixture(sectionCode, toolId);
+  },
+  getToolSection(toolId) {
+    const sectionCode = findToolSectionFixture(toolId);
+    if (sectionCode === undefined) {
+      return Promise.reject(new ToolNotFoundError(toolId));
+    }
+    return Promise.resolve(sectionCode);
   },
 
   listToolCommands(toolId) {

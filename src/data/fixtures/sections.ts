@@ -49,8 +49,9 @@ export const sectionsFixture: readonly Section[] = [
  * `DEFAULT_SECTION_ID`（見 `@/lib/nav-fixtures`）從課名 `"LITHO-02"` 換成
  * 課代碼 `LITHO02_CODE`（"SEC-1002"）之後，`/section/LITHO-02` 這條舊 URL
  * 不再對應任何 `sectionsFixture` 裡的 `code`——`layout.tsx`
- * （src/app/[locale]/section/[sid]/layout.tsx）對認不出的 `sid` 一律
- * `notFound()`，沒有 redirect、沒有相容層，所以舊 URL 現在直接 404。
+ * （src/app/[locale]/section/[code]/layout.tsx，R5 之後路徑動態段從 `[sid]`
+ * 改名 `[code]`）對認不出的 `code` 一律 `notFound()`，沒有 redirect、
+ * 沒有相容層，所以舊 URL 現在直接 404。
  *
  * Stage B 若已經有使用者把 `/section/LITHO-02` 存成書籤或分享出去，
  * 需要在 `layout.tsx`（或更上層的 middleware）加一層「課名 → 課代碼」的

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // getRequestConfig 本質上是 identity（`(fn) => fn`，見 next-intl 的型別定義：
 // `export default function getRequestConfig(createRequestConfig): (params) => ...`）。
@@ -21,11 +21,40 @@ vi.mock("../../messages/en.json", () => ({
   default: { shell: { appName: "Synthetic EN" } },
 }));
 
+// R7：locale 的真相來源從 requestLocale（cookie/URL 協商）換成
+// `fixturesDataSource.getCurrentUser()` 的 `User.locale`。這裡 mock
+// getCurrentUser 回傳值的 locale 欄位，讓底下每個 it 可以各自控制「目前
+// 登入者的語系」，藉此驅動 request.ts 的實際組態路徑——取代舊版直接控制
+// requestLocale 的做法，但驗的仍是同一件事（locale 判斷 + 動態 import +
+// deepMerge 三個分支）。
+let mockUserLocale = "zh-TW";
+// P4(b)：讓測試能模擬 getCurrentUser() 失敗（Stage B 之後可能是逾時／5xx／
+// 網路中斷），驗證 request.ts 的降級路徑（fallback 到 routing.defaultLocale）
+// 而不是讓 getRequestConfig() 整個 throw、拖垮整站。
+let mockShouldFail = false;
+vi.mock("@/data/fixtures", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/data/fixtures")>();
+  return {
+    ...original,
+    fixturesDataSource: {
+      ...original.fixturesDataSource,
+      getCurrentUser: async () => {
+        if (mockShouldFail) {
+          throw new Error("模擬上游使用者資料查詢失敗（逾時／5xx／網路中斷）");
+        }
+        const user = await original.fixturesDataSource.getCurrentUser();
+        return { ...user, locale: mockUserLocale };
+      },
+    },
+  };
+});
+
 const requestModule = await import("./request");
 const { deepMerge } = requestModule;
-const requestConfig = requestModule.default as (params: {
-  requestLocale: Promise<string | undefined>;
-}) => Promise<{ locale: string; messages: unknown }>;
+const requestConfig = requestModule.default as unknown as () => Promise<{
+  locale: string;
+  messages: unknown;
+}>;
 
 /**
  * deepMerge 是 src/i18n/request.ts 缺鍵 fallback 機制的核心（zh-TW 當 base，
@@ -131,10 +160,20 @@ describe("deepMerge", () => {
  * 這裡改用合成的 messages 物件（mock `../../messages/en.json` 的內容，
  * 不是塞進真正的檔案）走那條實際路徑，證明覆寫真的生效——不用等翻譯內容
  * 到位就能驗證這條組態路徑本身是對的。
+ *
+ * R7：驅動方式從 requestLocale 改成 `mockUserLocale`（見上方 `@/data/fixtures`
+ * 的 mock）——真相來源換了，但驗的仍是同一組分支（override 生效／直接回
+ * zh-TW／未知值安全 fallback），斷言強度不變。
  */
 describe("request.ts 的 default export（實際組態路徑）", () => {
-  it("locale=en：override 的鍵蓋過 zh-TW，沒 override 的鍵仍 fallback 回 zh-TW", async () => {
-    const result = await requestConfig({ requestLocale: Promise.resolve("en") });
+  beforeEach(() => {
+    mockUserLocale = "zh-TW";
+    mockShouldFail = false;
+  });
+
+  it("User.locale=en：override 的鍵蓋過 zh-TW，沒 override 的鍵仍 fallback 回 zh-TW", async () => {
+    mockUserLocale = "en";
+    const result = await requestConfig();
     expect(result.locale).toBe("en");
 
     const messages = result.messages as { shell: { appName: string; tagline: string } };
@@ -142,15 +181,27 @@ describe("request.ts 的 default export（實際組態路徑）", () => {
     expect(messages.shell.tagline).toBe("Fab1 · 設備 AI 助理");
   });
 
-  it("locale=zh-TW：直接回傳 zh-TW 訊息，不經過 deepMerge／動態 import", async () => {
-    const result = await requestConfig({ requestLocale: Promise.resolve("zh-TW") });
+  it("User.locale=zh-TW：直接回傳 zh-TW 訊息，不經過 deepMerge／動態 import", async () => {
+    mockUserLocale = "zh-TW";
+    const result = await requestConfig();
     expect(result.locale).toBe("zh-TW");
     const messages = result.messages as { shell: { appName: string } };
     expect(messages.shell.appName).toBe("Tool Center");
   });
 
-  it("未知 locale：hasLocale 判斷為否，fallback 回預設 locale zh-TW", async () => {
-    const result = await requestConfig({ requestLocale: Promise.resolve("fr") });
+  it("未知 locale（模擬上游髒資料繞過 schema 驗證）：hasLocale 判斷為否，fallback 回預設 locale zh-TW", async () => {
+    mockUserLocale = "fr";
+    const result = await requestConfig();
     expect(result.locale).toBe("zh-TW");
+  });
+
+  it("P4(b)：getCurrentUser() 失敗時，降級到 routing.defaultLocale，getRequestConfig() 不 throw、整站仍能渲染", async () => {
+    mockShouldFail = true;
+    // 關鍵斷言：await 不 reject——若沒有 try/catch 降級，這裡會直接拋出
+    // 「模擬上游使用者資料查詢失敗」，整個 getRequestConfig() 跟著炸掉。
+    const result = await requestConfig();
+    expect(result.locale).toBe("zh-TW");
+    const messages = result.messages as { shell: { appName: string } };
+    expect(messages.shell.appName).toBe("Tool Center");
   });
 });

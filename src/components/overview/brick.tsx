@@ -8,14 +8,20 @@ import { statusClass } from "@/lib/status";
 /**
  * 一格＝一台機台（mockup L509–565）。
  * 整格底色＝機台狀態；chamber chip 底色＝各自狀態——色義一致，一律用 statusClass()。
- * 點擊（或 Enter/Space）導到該機台的當機處理頁（live）。
+ * 點擊（或 Enter/Space）導到該機台的當機處理頁。
+ *
+ * R6：機台子樹不帶課別段（`docs/decisions/0002-route-and-locale.md`）——
+ * `/tool/<tid>`，不再是 `/section/<sid>/tool/<tid>/live`。簽章已經把
+ * `sectionId` prop 整個移除（見下方 `Brick({ tool })`）——上一輪只拿掉
+ * 組 URL 的用法、留著這個未用的 prop 沒有意義，這一波直接砍掉，
+ * `docs/ui/component-spec.md` 的 `Brick` 節同步更新（P5e）。
  */
-export function Brick({ sectionId, tool }: { sectionId: string; tool: ToolSummary }) {
+export function Brick({ tool }: { tool: ToolSummary }) {
   const router = useRouter();
   const t = useTranslations("overview");
 
   function open() {
-    router.push(`/section/${sectionId}/tool/${tool.id}/live`);
+    router.push(`/tool/${tool.id}`);
   }
 
   return (

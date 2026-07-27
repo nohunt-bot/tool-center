@@ -458,6 +458,13 @@ Status: active (2026-07-24)
       -> middleware 擋跨課；**每個寫入端點在 Server Action 內層再驗一次**；
       越權測試（改 URL、直打 Server Action）全部 403；Stage A 角色切換器停用
 - [ ] B2.1 `src/data/upstream/` 實作 + 型別轉換層 -> 切換資料來源，feature 層零改動（diff 驗證）
+      **風險記錄（路徑重構第二波驗收留下，見 `src/data/types.ts` 的 `ToolNotFoundError`
+      附近註解）**：若這裡把 upstream 實作搬到獨立 package／不同打包邊界，
+      `tool/[tid]/layout.tsx` 的 `error instanceof ToolNotFoundError` 判斷可能因為
+      class 被重複打包成兩份而失效。失效方向是「退化成 500」而非「退化回全部
+      404」，屬較安全的失敗模式，但仍是行為改變。B2.1 動工時必須連帶確認
+      throw 端與 catch 端是否仍在同一打包邊界；若不在，需改用跨邊界穩定的判斷
+      方式（例如比對 `error.name`，或改用 discriminated union 取代 class）。
 - [ ] B2.2 契約測試：既有 API 實際回應 → zod 驗證 -> CI 上跑
 - [ ] B2.3 TanStack Query 輪詢（alarm／status 30s）+ as-of 時間戳
 - [ ] B2.4 FDC 波形接 `resolution` 參數（既有 API 已支援）+ zoom 時重取
@@ -698,3 +705,15 @@ Status: active (2026-07-24)
   - `field_focus` / `slit` 是聚合量測（非 per-chuck），但 schema 強制兩個 chuck——
     暫把同一讀數複製到 A/B。schema 是否該允許單一量測？
   - mockup 日期本身不一致（case 顯示 07/03 案號但敘事說 07/14）——fixtures 暫取 07-14。
+- **`SectionShell` 500 的呈現待改善（不是缺陷，記錄待辦）**：`section-shell.tsx` 的
+  `getCurrentUser()` 刻意不包 try/catch，使用者資料源查詢失敗時整頁 500 是設計上的
+  fail-closed（理由與「不要照抄 `request.ts` 的降級模式」寫在該檔案的 docstring 裡）。
+  目前的落差是**呈現層**：使用者看到的只是 Next 通用 500 頁，分辨不出「這是使用者
+  資料源掛掉」還是其他伺服器錯誤。未來應補一個認得這種失敗的 error boundary／
+  友善訊息（例如「暫時無法確認您的權限，請稍後再試」）。**修法是改呈現，不是改成
+  降級成某個預設使用者或預設角色去算權限**——降級會重新打開授權誤判的風險。
+- **e2e 測試目錄缺口**：`playwright.config.ts` 的 `testDir: "./e2e"` 指向的目錄目前
+  不存在，`pnpm test:e2e` 現況是空跑，沒有任何 e2e 測試被實際執行。這一波（R5–R8／
+  P1–P6）新增的 FDC modal 攔截行為——尤其「modal 開啟中 reload 應退化成完整頁面」
+  這條（沿用 A0.8 的雙模式驗證方式，見該節）——目前只靠人工瀏覽器驗證過，沒有
+  自動化保護。補 e2e 時，這是最適合優先覆蓋的路徑。

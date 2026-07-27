@@ -47,6 +47,7 @@ const LAO_LI: User = {
   sectionId: LITHO02_CODE,
   managerOf: [],
   supportSections: [LITHO01_CODE],
+  locale: "zh-TW",
 };
 
 const MANAGER: User = {
@@ -55,6 +56,7 @@ const MANAGER: User = {
   sectionId: LITHO02_CODE,
   managerOf: [LITHO02_CODE],
   supportSections: [],
+  locale: "zh-TW",
 };
 
 const SPONSOR: User = {
@@ -63,6 +65,7 @@ const SPONSOR: User = {
   sectionId: "FAB-STAFF",
   managerOf: [],
   supportSections: [LITHO02_CODE],
+  locale: "zh-TW",
 };
 
 const NOW = new Date("2026-07-24T00:00:00Z");

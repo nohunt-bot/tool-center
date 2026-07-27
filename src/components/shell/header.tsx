@@ -1,10 +1,7 @@
 "use client";
 
-import { Suspense } from "react";
-import { useLocale, useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { routing } from "@/i18n/routing";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import type { Section } from "@/domain/tool";
 
 /**
@@ -25,11 +22,16 @@ export type NavSection = Section & { readonly accessible: boolean };
  * 課別選單只列使用者有權進入的課別；無支援權限者 disabled。
  * A1.11 會把 gating 接上 user.supportSections，B1.3 由 server 強制（前端 disabled 只是 UX）。
  *
- * F5：內層用了 next/navigation 的 useSearchParams()，Next.js 要求呼叫它的元件
- * 必須包在 <Suspense> 底下，否則會把整棵樹（往上一路到 layout）都推去
- * client-side rendering，等於白白讓 App Router 的 server rendering 失去意義。
- * 這裡把「用到 useSearchParams 的部分」拆到 HeaderBar，Header 本身只負責包
- * Suspense boundary。
+ * R7（`docs/decisions/0002-route-and-locale.md`）：語系不再由這個元件切換
+ * （`localePrefix: "never"`，真相來源是 `User.locale`，見 `@/i18n/request`）。
+ * 拿掉語系切換函式與語系下拉之後，這裡不再讀網址列的查詢參數，原本為了
+ * 那個 hook 加的 Suspense 邊界與 loading 骨架子元件整組一起刪掉——那層
+ * Suspense 存在的唯一理由就是那個 hook 強制要求呼叫端包一層，理由本身
+ * 消失了，不需要留著空殼。
+ *
+ * 元件仍維持 Client Component：課別 `<select>` 的 `onChange` 需要
+ * `useRouter().push()`，settings 按鈕的 `onClick` 也一樣，兩者都要瀏覽器端
+ * 互動，沒有可以改回 Server Component 的空間。
  */
 export function Header({
   sectionId,
@@ -38,83 +40,11 @@ export function Header({
   sectionId: string;
   sections: readonly NavSection[];
 }) {
-  return (
-    <Suspense fallback={<HeaderFallback />}>
-      <HeaderBar sectionId={sectionId} sections={sections} />
-    </Suspense>
-  );
-}
-
-/**
- * 真實 header 與 fallback 共用同一個容器 class，但這只統一了 padding／border／
- * flex-wrap 等「樣式」規則，不保證高度一致——高度最終由子內容（文字行高、
- * select 的實際寬度換行時機）決定，骨架色塊的尺寸不是照真實內容逐一量出來
- * 校準的。H2：reviewer 實測 9 種 viewport 寬度，找不到任何一個寬度讓真實
- * header 與這個 fallback 高度相等（連 flex-wrap 換行的斷點都對不上），
- * 所以「高度一致」是這裡不該再宣稱的事——共用這個 class 的唯一目的是讓
- * 樣式（padding／border）只有一份來源，不是為了保證高度。
- *
- * 目前 CLS（Cumulative Layout Shift）實測是 0，但原因不是高度對齊，而是：
- * 用到這個 header 的路由全部是 dynamic render（Next.js build 輸出裡標
- * `ƒ`，不是 static）——內層 HeaderBar 讀 useSearchParams()，request time
- * 才能解析，這會讓路由無法 static bailout；換句話說 SSR 輸出的 HTML
- * 本來就不會出現這個 fallback（fallback 只有在真的發生 client-side loading
- * 狀態時才會顯示，而目前這個 dynamic-render 的設置下不會發生這種狀態），
- * 所以高度差距在目前的路由設定下永遠不會被使用者看到。
- *
- * 待辦提醒：如果以後任何一個用到這個 header 的路由改成 static
- * prerendering，這個「fallback 反正不會出現」的前提就不成立了——骨架
- * 色塊真的可能在 client-side 閃一下，屆時上面說的高度落差就會變成真的
- * CLS，需要重新評估（可能要真的照真實內容量測校準骨架尺寸，或改用其他
- * 手段避免 layout shift），不能再套用這份「反正不會出現」的假設。
- */
-const HEADER_CONTAINER_CLASS =
-  "flex flex-shrink-0 flex-wrap items-center gap-[10px] border-b border-line bg-panel px-5 py-[10px]";
-
-/**
- * Suspense fallback：跟 HeaderBar 用同一個 HEADER_CONTAINER_CLASS，只共用
- * 樣式（padding／border／flex-wrap），高度不保證一致，見上方 H2 的說明。
- */
-function HeaderFallback() {
-  return (
-    <header className={HEADER_CONTAINER_CLASS} aria-hidden="true">
-      <div>
-        <div className="h-[16px] w-[100px] animate-pulse rounded bg-line" />
-        <div className="mt-[2px] h-[10px] w-[140px] animate-pulse rounded bg-line" />
-      </div>
-      <div className="ml-4 h-[10px] w-[60px] animate-pulse rounded bg-line" />
-      <div className="h-[27px] w-[170px] animate-pulse rounded-[7px] bg-line" />
-      <div className="h-[9.5px] w-[110px] animate-pulse rounded bg-line" />
-      <div className="h-[10px] w-[40px] animate-pulse rounded bg-line" />
-      <div className="h-[27px] w-[90px] animate-pulse rounded-[7px] bg-line" />
-      <div className="ml-auto h-[27px] w-[70px] animate-pulse rounded-[6px] bg-line" />
-    </header>
-  );
-}
-
-function HeaderBar({
-  sectionId,
-  sections,
-}: {
-  sectionId: string;
-  sections: readonly NavSection[];
-}) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const locale = useLocale();
   const t = useTranslations("shell");
 
-  // 語系切換：保留當前頁面與 query（spec 驗收重點）。
-  // usePathname() 來自 next-intl 的 navigation wrapper，回傳值已經不含 locale 前綴，
-  // 所以只要換 { locale } 選項，router 就會導到「同一頁、不同語系」。
-  function switchLocale(nextLocale: string) {
-    const query = Object.fromEntries(searchParams.entries());
-    router.replace({ pathname, query }, { locale: nextLocale });
-  }
-
   return (
-    <header className={HEADER_CONTAINER_CLASS}>
+    <header className="flex flex-shrink-0 flex-wrap items-center gap-[10px] border-b border-line bg-panel px-5 py-[10px]">
       <div>
         <div className="text-[16px] font-bold">{t("appName")}</div>
         <div className="text-[10px] text-ink3">{t("tagline")}</div>
@@ -151,22 +81,6 @@ function HeaderBar({
       </select>
 
       <span className="text-[9.5px] text-ink3">{t("sectionHint")}</span>
-
-      <label className="text-[10px] font-bold tracking-wide text-ink3" htmlFor="locale-select">
-        {t("localeLabel")}
-      </label>
-      <select
-        id="locale-select"
-        className="cursor-pointer rounded-[7px] border border-line bg-white px-[10px] py-[5px] text-[12px] outline-none"
-        value={locale}
-        onChange={(event) => switchLocale(event.target.value)}
-      >
-        {routing.locales.map((candidate) => (
-          <option key={candidate} value={candidate}>
-            {candidate === "zh-TW" ? t("localeZhTW") : t("localeEn")}
-          </option>
-        ))}
-      </select>
 
       <button
         type="button"
