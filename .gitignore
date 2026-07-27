@@ -4,6 +4,8 @@
 .claude/settings.local.json
 .claude/settings.json.bak-*
 .claude/security-scan.log
+# harness 備份目錄，由另一條 Claude Code session 依 ~/.claude/CLAUDE.md 硬規則產生，非專案內容
+backups/
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
